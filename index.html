@@ -1273,7 +1273,7 @@ function setLocPill(status) {
   const el = document.getElementById('loc-pill');
   el.className = 'status-pill';
   if (status === 'detecting') { el.classList.add('pill-detecting'); el.textContent = '⏳ Detecting…'; }
-  if (status === 'ready')     { el.classList.add('pill-ready');     el.textContent = '✒ Ready'; }
+  if (status === 'ready')     { el.classList.add('pill-ready');     el.textContent = '✓ Ready'; }
   if (status === 'error')     { el.classList.add('pill-error');     el.textContent = '⚠ Manual'; }
 }
 
@@ -1341,57 +1341,95 @@ document.getElementById('camera-input').addEventListener('change', async e => {
   await doUpload(file);
 });
 
-a[�[���[��[ۈ�\�Y
-�[JHY�
-P\�X���[�
-H�����\�
-	�X\�H�Yۈ[��\��	�N��]\���B�����\�Y��ܙ\��
-N��H����\�\��[XY�B��ۜ���\�\��YH]�Z]��\�\��[Y��[KNL��
-JN���[��\�H��\��^\���ۜ����YH]�Z][��\�Q��\��ӑ�Q˜�����\�	ܛ��	�N�ۜ�Y�YH]�Z][��\�Q��\��[�]^�Q�ܑ��\�\�Y�\��K���Y
-N\�Y�\�ћ�\�HY�Y����Z[�[[�[YN��[YW�VVVKSSKQ�[\�˚��ۜ����H�]�]J
-N�ۜ�]HH��˝�T����[��
-K��X�JL
-N�ۜ�[YHH��˝�[YT��[��
-K��X�J
-K��\X�J΋��	��N�ۜ��Y�S�[YHH�[�]^�Q�ܑ��\�\�\�\��[YH	�\�\��K��\X�J�����	���N�ۜ��[S�[YHH	��Y�S�[Y_W��]_W��[Y_K�����ۜ�\�YYH]�Z]\�Y�[JY�Y�[S�[YK��\�\��Y
-N�\���\�����[�
-����[Y[���][[Y[��RY
-	���\��X��[�	�K�^�۝[�H\���\�����[���[Y[���][[Y[��RY
-	���\��X�Y�I�K��[K�\�^HH	�[�[�KY�^	�����\�Y�X��\���[S�[YK���\�]�	��ӑ�Q˜�����\�K���[�]^�Q�ܑ��\�\�Y�\��_X��X�\��\�YY��X�\��JN��][Y[�]
+async function doUpload(file) {
+  if (!App.account) { showToast('Please sign in first'); return; }
 
+  showUploadProgress();
 
-HO�YU\�Y
+  try {
+    // Compress image
+    const compressed = await compressImg(file, 1920, 0.85);
 
-N�Y�X�[����
-NK�
-N�H�]�
-\��HYU\�Y
+    // Ensure folders exist
+    const rootId  = await ensureFolder(CONFIG.rootFolder, 'root');
+    const addrId  = await ensureFolder(sanitizeForFolder(App.address), rootId);
+    App.addressFolder = addrId;
 
-N����\�
-	�\�Y�Z[Y�	�
-�
-\���Y\��Y�H	�[�ۛ�ۈ\��܉�JN�ۜ��K�\��܊	�\�Y\��܎��\��NB�B�����\�^�H
-���\�\��[XY�H\�[���[��\�[��[ۈ��\�\��[Y��[KX^�]X[]JH�]\���]���Z\�J�\���HO��ۜ�[Y�H�]�[XY�J
-N�ۜ�\�HT��ܙX]Sؚ�X�T�
-�[JN[Y˛ۛ�YH
+    // Build filename: Name_YYYY-MM-DD_HHmmss.jpg
+    const now  = new Date();
+    const date = now.toISOString().slice(0, 10);
+    const time = now.toTimeString().slice(0, 8).replace(/:/g, '');
+    const safeName = sanitizeForFolder(App.userName || 'User').replace(/\s+/g, '_');
+    const fileName  = `${safeName}_${date}_${time}=.jpg`;
 
-HO�]��Y��ZY��HH[Y�Y�
-��X^�H�HX]���[�
-
-�X^���N��HX^��B��ۜ��[��\�H��[Y[��ܙX]Q[[Y[�
-	��[��\��N�[��\˝�YH���[��\˚ZY�H�[��\˙�]�۝^
-	̙	�K��]�[XY�J[Y��
-NT���]���Sؚ�X�T�
-\�
-N�[��\˝Л؊�؈O��\���J�؈�[JK	�[XY�KڜY��]X[]JNN[Y˛ۙ\��܈H
+    const uploaded = await uploadFile(addrId, fileName, compressed);
 
-HO��\���J�[JN[Y˜ܘ�H\�JNB����OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB���T�QՑT�VB���OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB��[��[ۈ���\�Y��ܙ\��
-H��[Y[���][[Y[��RY
-	�\�YX�\�	�K�[��\�SH�]��\��H��[��\����]���]��\��H�\�Y]]H��\�Y[�����)��]���]��\��H�\�Y[\�ȏ��]�[���ۙQ�]�O�]�����[Y[���][[Y[��RY
-	�\�Y[ݙ\�^I�K��\��\��Y
-	�����NB���[��[ۈ���\�Y�X��\���\�[
-H��[Y[���][[Y[��RY
-	�\�YX�\�	�K�[��\�SH�]��\��H��X��\��X�\��H���$��]���]��\��H�\�Y]]H�����]�YO�]���]��\��H�\�Y[\�ȏ��X��\�ٝ[H�]�Y�ۙQ�]�O�]���]��\��H�\�Y\]���<'��H	ܙ\�[���\�]K�����<'��	ܙ\�[��[S�[Y_B��]���B���[��[�n hideUpload() {
+    App.folderPhotoCount++;
+    document.getElementById('loc-photo-count').textContent = App.folderPhotoCount;
+    document.getElementById('loc-photo-badge').style.display = 'inline-flex';
+
+    showUploadSuccess({
+      fileName,
+      folderPath: `${CONFIG.rootFolder}/${sanitizeForFolder(App.address)}`,
+      webUrl: uploaded.webUrl,
+    });
+
+    setTimeout(() => {
+      hideUpload();
+      loadRecentPhotos();
+    }, 2800);
+
+  } catch (err) {
+    hideUpload();
+    showToast('Upload failed: ' + (err.message || 'Unknown error'));
+    console.error('Upload error:', err);
+  }
+}
+
+// Resize + compress image using canvas
+function compressImg(file, maxW, quality) {
+  return new Promise(resolve => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      let { width: w, height: h } = img;
+      if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(blob => resolve(blob || file), 'image/jpeg', quality);
+    };
+    img.onerror = () => resolve(file);
+    img.src = url;
+  });
+}
+
+// ============================================================
+//  UPLOAD OVERLAY
+// ============================================================
+function showUploadProgress() {
+  document.getElementById('upload-card').innerHTML = `
+    <div class="spinner"></div>
+    <div class="upload-title">Uploading Photo…</div>
+    <div class="upload-msg">Saving to OneDrive</div>
+  `;
+  document.getElementById('upload-overlay').classList.add('show');
+}
+
+function showUploadSuccess(result) {
+  document.getElementById('upload-card').innerHTML = `
+    <div class="success-circle">✓</div>
+    <div class="upload-title">Photo Saved!</div>
+    <div class="upload-msg">Successfully saved to OneDrive</div>
+    <div class="upload-path">
+      📁 ${result.folderPath}/<br>
+      📸 ${result.fileName}
+    </div>
+  `;
+}
+
+function hideUpload() {
   document.getElementById('upload-overlay').classList.remove('show');
 }
 
