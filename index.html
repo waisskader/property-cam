@@ -14,11 +14,7 @@
 
   <!-- Microsoft Authentication Library -->
   <script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"
-          integrity="sha384-W5F+0QT/rmvxWNvOF7RTcL74MTWG0xGfIbGBVIBqLFzSEFrxMSFXKAUx1rnBFJl"
-          crossorigin="anonymous"
-          onerror="this.removeAttribute('integrity'); this.src=this.src;"></script>
-  <script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"
-          id="msal-fallback" style="display:none"></script>
+          crossorigin="anonymous"></script>
 
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -607,7 +603,7 @@
     }
     .settings-row:first-of-type { border-top: none; }
     .settings-row-label { font-size: 16px; color: var(--text); }
-    .settings-row-value { font-size: 14px; color: var(--text-light); max-width: 55%; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .settings-row-value { font-size: 14px; color: var(--text-light); max-width: 55%; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowraw; }
     .settings-row.danger .settings-row-label { color: var(--danger); }
     .settings-row.danger .settings-row-value { color: var(--danger); }
 
@@ -1254,7 +1250,7 @@ function setAddress(address) {
 
 async function checkExistingPhotos(address) {
   try {
-    const rootId = await ensureFolder(CONFIG.rootFolder, 'root');
+    const rootId  = await ensureFolder(CONFIG.rootFolder, 'root');
     const addrId  = await ensureFolder(sanitizeForFolder(address), rootId);
     App.addressFolder = addrId;
     const count   = await countPhotosInFolder(addrId);
@@ -1360,7 +1356,7 @@ async function doUpload(file) {
     const date = now.toISOString().slice(0, 10);
     const time = now.toTimeString().slice(0, 8).replace(/:/g, '');
     const safeName = sanitizeForFolder(App.userName || 'User').replace(/\s+/g, '_');
-    const fileName  = `${safeName}_${date}_${time}=.jpg`;
+    const fileName  = `${safeName}_${date}_${time}.jpg`;
 
     const uploaded = await uploadFile(addrId, fileName, compressed);
 
@@ -1612,9 +1608,8 @@ async function init() {
     console.warn('PropertyCam: Azure Client ID not configured. See SETUP-GUIDE.md');
   }
 
-  App.msalInstance = new msal.PublicClientApplication(MSAL_CONFIG);
-
   try {
+    App.msalInstance = new msal.PublicClientApplication(MSAL_CONFIG);
     const redirectResult = await App.msalInstance.handleRedirectPromise();
 
     if (redirectResult) {
