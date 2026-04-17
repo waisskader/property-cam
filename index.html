@@ -1027,8 +1027,15 @@ const LOGIN_REQUEST = {
   scopes: ['User.Read', 'Files.ReadWrite'],
 };
 
-function signIn() {
-  App.msalInstance.loginRedirect(LOGIN_REQUEST);
+async function signIn() {
+  try {
+    const result = await App.msalInstance.loginPopup(LOGIN_REQUEST);
+    App.account = result.account;
+    goToMain();
+  } catch (err) {
+    console.error('Sign in error:', err);
+    showToast('Sign in failed. Please try again.');
+  }
 }
 
 async function signOut() {
