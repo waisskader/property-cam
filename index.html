@@ -1053,7 +1053,7 @@ async function resetApp() {
   App.msalInstance.logout();
 }
 
-async function getToken()async function getToken() {
+async function getToken() {
   if (!App.msalInstance.getAccount()) throw new Error('Not signed in');
   try {
     const r = await App.msalInstance.acquireTokenSilent(LOGIN_REQUEST);
