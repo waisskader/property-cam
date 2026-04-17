@@ -13,7 +13,7 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
   <!-- Microsoft Authentication Library -->
-  <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.38.3/lib/msal-browser.min.js"
+  <script src="https://cdn.jsdelivr.net/npm/msal@1.4.18/dist/msal.min.js"
           crossorigin="anonymous"></script>
 
   <style>
@@ -1033,7 +1033,7 @@ function signIn() {
 
 async function signOut() {
   if (!confirm('Sign out of your Microsoft account?')) return;
-  App.msalInstance.logoutRedirect({ postLogoutRedirectUri: window.location.href });
+  App.msalInstance.logout();
 }
 
 function changeName() {
@@ -1050,17 +1050,16 @@ function changeName() {
 async function resetApp() {
   if (!confirm('This will clear your name and sign you out. Continue?')) return;
   localStorage.removeItem('pcam_name');
-  App.msalInstance.logoutRedirect({ postLogoutRedirectUri: window.location.href });
+  App.msalInstance.logout();
 }
 
-async function getToken() {
-  const acct = App.msalInstance.getAllAccounts()[0];
-  if (!acct) throw new Error('Not signed in');
+async function getToken()async function getToken() {
+  if (!App.msalInstance.getAccount()) throw new Error('Not signed in');
   try {
-    const r = await App.msalInstance.acquireTokenSilent({ ...LOGIN_REQUEST, account: acct });
+    const r = await App.msalInstance.acquireTokenSilent(LOGIN_REQUEST);
     return r.accessToken;
   } catch {
-    const r = await App.msalInstance.acquireTokenPopup({ ...LOGIN_REQUEST, account: acct });
+    const r = await App.msalInstance.acquireTokenPopup(LOGIN_REQUEST);
     return r.accessToken;
   }
 }
@@ -1601,36 +1600,43 @@ function goToMain() {
 // ============================================================
 //  INIT
 // ============================================================
-async function init() {
-  // Check if client ID has been configured
+function init() {
   if (CONFIG.clientId === 'YOUR_AZURE_CLIENT_ID') {
-    // Show a setup warning in the sign-in card
     console.warn('PropertyCam: Azure Client ID not configured. See SETUP-GUIDE.md');
   }
 
   try {
-    App.msalInstance = new msal.PublicClientApplication(MSAL_CONFIG);
-    const redirectResult = await App.msalInstance.handleRedirectPromise();
+    App.msalInstance = new Msal.UserAgentApplication(MSAL_CONFIG);
 
-    if (redirectResult) {
-      // Returning from Microsoft sign-in
-      App.account = redirectResult.account;
-    }
+    App.msalInstance.handleRedirectCallback((error, response) => {
+      if (error) {
+        console.error('MSAL redirect error:', error);
+        showScreen(App.userName ? 'signin' : 'register');
+        return;
+      }
+      if (response) {
+        App.account = App.msalInstance.getAccount();
+        if (App.account && App.userName) {
+          goToMain();
+        } else {
+          showScreen('register');
+        }
+      }
+    });
 
-    // Decide which screen to show
     setTimeout(() => {
       if (!App.userName) {
         showScreen('register');
       } else {
-        const accounts = App.msalInstance.getAllAccounts();
-        if (accounts.length === 0) {
+        const account = App.msalInstance.getAccount();
+        if (!account) {
           showScreen('signin');
         } else {
-          App.account = accounts[0];
+          App.account = account;
           goToMain();
         }
       }
-    }, 1500);
+    }, 800);
 
   } catch (err) {
     console.error('MSAL init error:', err);
