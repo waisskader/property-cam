@@ -1,15 +1,14 @@
-// PropertyCam Service Worker v1.0
+// PropertyCam Service Worker v2.0
 // Enables "Add to Home Screen" / PWA install on iOS and Android
 
-const CACHE = 'propertycam-v1';
+const CACHE = 'propertycam-v2';
 const PRECACHE = [
-  './index.html',
   './manifest.json',
   './icon-192.png',
   './apple-touch-icon.png',
 ];
 
-// Install: pre-cache app shell
+// Install: pre-cache static assets (NOT index.html — keep it network-first)
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE).then(cache => cache.addAll(PRECACHE))
@@ -27,7 +26,7 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Fetch: network-first for API calls, cache-first for app shell
+// Fetch handler
 self.addEventListener('fetch', event => {
   const url = event.request.url;
 
@@ -36,7 +35,7 @@ self.addEventListener('fetch', event => {
     'microsoftonline.com',
     'graph.microsoft.com',
     'nominatim.openstreetmap.org',
-    'alcdn.msauth.net',
+    'cdn.jsdelivr.net',
   ];
 
   if (networkOnly.some(h => url.includes(h))) {
@@ -50,7 +49,21 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Cache-first for app shell
+  // Network-first for index.html — always get the freshest version
+  if (url.endsWith('/') || url.includes('index.html') || url === self.registration.scope) {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          const clone = response.clone();
+          caches.open(CACHE).then(cache => cache.put(event.request, clone));
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Cache-first for other static assets (icons, manifest)
   event.respondWith(
     caches.match(event.request).then(cached => cached || fetch(event.request))
   );
