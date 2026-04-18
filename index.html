@@ -1015,7 +1015,7 @@ const MSAL_CONFIG = {
   auth: {
     clientId:    CONFIG.clientId,
     authority:   `https://login.microsoftonline.com/${CONFIG.tenantId || 'common'}`,
-    redirectUri: window.location.href.split('?')[0].split('#')[0],
+    redirectUri: 'https://waisskader.github.io/property-cam/',
   },
   cache: {
     cacheLocation:      'localStorage',
@@ -1581,9 +1581,9 @@ function register() {
 }
 
 function checkAuthAndProceed() {
-  const accounts = App.msalInstance.getAllAccounts();
-  if (accounts.length > 0) {
-    App.account = accounts[0];
+  const account = App.msalInstance.getAccount();
+  if (account) {
+    App.account = account;
     goToMain();
   } else {
     showScreen('signin');
@@ -1602,7 +1602,17 @@ function goToMain() {
 // ============================================================
 function init() {
   if (CONFIG.clientId === 'YOUR_AZURE_CLIENT_ID') {
-    console.warn('PropertyCam: Azure Client ID not configured. See SETUP-GUIDE.md');
+    console.warn('PropertyCam: Azure Client ID not configured.');
+  }
+
+  // Clear stale MSAL 2.x interaction state that causes state_mismatch errors
+  if (!window.location.hash.includes('id_token')) {
+    Object.keys(localStorage).forEach(k => {
+      if (k.includes('interaction.status') || k.includes('request.params') ||
+          k.includes('token.keys') || k.includes('account.keys')) {
+        localStorage.removeItem(k);
+      }
+    });
   }
 
   try {
@@ -1610,7 +1620,13 @@ function init() {
 
     App.msalInstance.handleRedirectCallback((error, response) => {
       if (error) {
-        console.error('MSAL redirect error:', error);
+        console.error('MSAL redirect error:', error.errorCode, error.errorMessage);
+        const account = App.msalInstance.getAccount();
+        if (account && App.userName) {
+          App.account = account;
+          goToMain();
+          return;
+        }
         showScreen(App.userName ? 'signin' : 'register');
         return;
       }
@@ -1618,8 +1634,10 @@ function init() {
         App.account = App.msalInstance.getAccount();
         if (App.account && App.userName) {
           goToMain();
-        } else {
+        } else if (App.account) {
           showScreen('register');
+        } else {
+          showScreen('signin');
         }
       }
     });
@@ -1636,16 +1654,13 @@ function init() {
           goToMain();
         }
       }
-    }, 800);
+    }, 1000);
 
   } catch (err) {
     console.error('MSAL init error:', err);
-    setTimeout(() => {
-      showScreen(App.userName ? 'signin' : 'register');
-    }, 1500);
+    setTimeout(() => showScreen(App.userName ? 'signin' : 'register'), 1500);
   }
 }
-
 init();
 
 // Register service worker for PWA installability (Add to Home Screen)
