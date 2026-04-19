@@ -12,7 +12,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
-  <!-- Microsoft Authentication Library -->
+  <!-- Microsoft Authentication Library v1 (implicit grant, works with Web redirect URIs) -->
   <script src="https://cdn.jsdelivr.net/npm/msal@1.4.18/dist/msal.min.js"
           crossorigin="anonymous"></script>
 
@@ -320,6 +320,69 @@
     }
     .loc-address.dim { color: var(--text-light); font-weight: 400; font-size: 15px; }
 
+    /* ── Job Details Card ── */
+    .job-card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 14px 16px 12px;
+      margin: 0 16px 12px;
+      box-shadow: var(--shadow);
+    }
+    .job-card-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-mid);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 11px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .optional-badge {
+      font-size: 10px;
+      background: var(--bg);
+      color: var(--text-light);
+      padding: 2px 7px;
+      border-radius: 20px;
+      font-weight: 400;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+    .job-fields { display: flex; gap: 10px; }
+    .job-field { flex: 1; }
+    .job-label {
+      font-size: 11px;
+      color: var(--text-light);
+      display: block;
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+    .job-input {
+      width: 100%;
+      padding: 8px 11px;
+      border: 1.5px solid var(--border);
+      border-radius: 9px;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--bg);
+      outline: none;
+      font-family: inherit;
+      -webkit-appearance: none;
+    }
+    .job-input:focus { border-color: var(--accent); background: #fff; }
+    .job-preview {
+      margin-top: 10px;
+      padding: 8px 11px;
+      background: var(--bg);
+      border-radius: 9px;
+      font-size: 12px;
+      color: var(--text-mid);
+      word-break: break-all;
+      line-height: 1.5;
+    }
+    .job-preview-label { font-weight: 700; color: var(--text); }
+
     .loc-edit-row {
       display: flex;
       gap: 8px;
@@ -603,7 +666,7 @@
     }
     .settings-row:first-of-type { border-top: none; }
     .settings-row-label { font-size: 16px; color: var(--text); }
-    .settings-row-value { font-size: 14px; color: var(--text-light); max-width: 55%; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowraw; }
+    .settings-row-value { font-size: 14px; color: var(--text-light); max-width: 55%; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .settings-row.danger .settings-row-label { color: var(--danger); }
     .settings-row.danger .settings-row-value { color: var(--danger); }
 
@@ -837,6 +900,24 @@
       </div>
     </div>
 
+    <!-- Job Details Card (shown once address is ready) -->
+    <div class="job-card" id="job-card" style="display:none">
+      <div class="job-card-title">📋 Job Details <span class="optional-badge">optional</span></div>
+      <div class="job-fields">
+        <div class="job-field">
+          <label class="job-label">Customer Name</label>
+          <input class="job-input" id="job-customer" type="text" placeholder="e.g. John Smith" autocomplete="off" oninput="updateJobPreview()">
+        </div>
+        <div class="job-field">
+          <label class="job-label">Invoice #</label>
+          <input class="job-input" id="job-invoice" type="text" placeholder="e.g. 1234" autocomplete="off" oninput="updateJobPreview()">
+        </div>
+      </div>
+      <div class="job-preview" id="job-preview" style="display:none">
+        <span class="job-preview-label">📁 </span><span id="job-preview-text"></span>
+      </div>
+    </div>
+
     <!-- Camera Button -->
     <div class="cam-section">
       <div class="cam-ring-outer">
@@ -1004,7 +1085,9 @@ const App = {
   msalInstance:   null,
   account:        null,
   address:        null,
-  addressFolder:  null,  // OneDrive folder ID for current address
+  customerName:   null,
+  invoiceNumber:  null,
+  addressFolder:  null,  // OneDrive folder ID for current job
   folderPhotoCount: 0,
 };
 
@@ -1238,21 +1321,46 @@ async function reverseGeocode(lat, lon) {
   return parts.join(', ');
 }
 
+// Build the full job folder name from address + optional customer + invoice
+function buildJobFolderName() {
+  const parts = [sanitizeForFolder(App.address)];
+  const customer = (document.getElementById('job-customer')?.value || '').trim();
+  const invoice  = (document.getElementById('job-invoice')?.value  || '').trim();
+  if (customer) parts.push(customer);
+  if (invoice)  parts.push('INV-' + invoice);
+  App.customerName  = customer || null;
+  App.invoiceNumber = invoice  || null;
+  return parts.join(' — ');
+}
+
+function updateJobPreview() {
+  if (!App.address) return;
+  const name = buildJobFolderName();
+  const preview = document.getElementById('job-preview');
+  document.getElementById('job-preview-text').textContent = name;
+  preview.style.display = (App.customerName || App.invoiceNumber) ? 'block' : 'none';
+}
+
 function setAddress(address) {
   App.address = address;
   setLocText(address, false, false);
   setLocPill('ready');
   showLocEditBtn();
   enableCamera();
+  // Show job details card
+  document.getElementById('job-card').style.display = 'block';
+  updateJobPreview();
   checkExistingPhotos(address);
 }
 
 async function checkExistingPhotos(address) {
   try {
-    const rootId  = await ensureFolder(CONFIG.rootFolder, 'root');
-    const addrId  = await ensureFolder(sanitizeForFolder(address), rootId);
-    App.addressFolder = addrId;
-    const count   = await countPhotosInFolder(addrId);
+    const jobFolder = buildJobFolderName();
+    const rootId    = await ensureFolder(CONFIG.rootFolder, 'root');
+    const jobId     = await ensureFolder(jobFolder, rootId);
+    const waissId   = await ensureFolder('Waiss', jobId);
+    App.addressFolder = waissId;
+    const count     = await countPhotosInFolder(waissId);
     App.folderPhotoCount = count;
 
     const badge = document.getElementById('loc-photo-badge');
@@ -1303,13 +1411,21 @@ function cancelLocEdit() {
 }
 
 function refreshLocation() {
-  App.address = null;
+  App.address       = null;
   App.addressFolder = null;
+  App.customerName  = null;
+  App.invoiceNumber = null;
   document.getElementById('loc-photo-badge').style.display = 'none';
   document.getElementById('loc-edit-btn-row').style.display = 'none';
   document.getElementById('loc-edit-row').style.display = 'none';
   document.getElementById('cam-btn').classList.add('disabled');
   document.getElementById('cam-label').textContent = 'Waiting for location…';
+  // Hide and reset job card
+  const jobCard = document.getElementById('job-card');
+  jobCard.style.display = 'none';
+  document.getElementById('job-customer').value = '';
+  document.getElementById('job-invoice').value  = '';
+  document.getElementById('job-preview').style.display = 'none';
   detectLocation();
 }
 
@@ -1345,10 +1461,12 @@ async function doUpload(file) {
     // Compress image
     const compressed = await compressImg(file, 1920, 0.85);
 
-    // Ensure folders exist
-    const rootId  = await ensureFolder(CONFIG.rootFolder, 'root');
-    const addrId  = await ensureFolder(sanitizeForFolder(App.address), rootId);
-    App.addressFolder = addrId;
+    // Ensure folders exist: Property Photos / {jobFolder} / Waiss /
+    const jobFolder = buildJobFolderName();
+    const rootId    = await ensureFolder(CONFIG.rootFolder, 'root');
+    const jobId     = await ensureFolder(jobFolder, rootId);
+    const waissId   = await ensureFolder('Waiss', jobId);
+    App.addressFolder = waissId;
 
     // Build filename: Name_YYYY-MM-DD_HHmmss.jpg
     const now  = new Date();
@@ -1357,7 +1475,7 @@ async function doUpload(file) {
     const safeName = sanitizeForFolder(App.userName || 'User').replace(/\s+/g, '_');
     const fileName  = `${safeName}_${date}_${time}.jpg`;
 
-    const uploaded = await uploadFile(addrId, fileName, compressed);
+    const uploaded = await uploadFile(waissId, fileName, compressed);
 
     App.folderPhotoCount++;
     document.getElementById('loc-photo-count').textContent = App.folderPhotoCount;
@@ -1365,7 +1483,7 @@ async function doUpload(file) {
 
     showUploadSuccess({
       fileName,
-      folderPath: `${CONFIG.rootFolder}/${sanitizeForFolder(App.address)}`,
+      folderPath: `${CONFIG.rootFolder}/${jobFolder}/Waiss`,
       webUrl: uploaded.webUrl,
     });
 
@@ -1602,14 +1720,15 @@ function goToMain() {
 // ============================================================
 function init() {
   if (CONFIG.clientId === 'YOUR_AZURE_CLIENT_ID') {
-    console.warn('PropertyCam: Azure Client ID not configured.');
+    console.warn('PropertyCam: Azure Client ID not configured. See SETUP-GUIDE.md');
   }
 
-  // Clear stale MSAL 2.x interaction state that causes state_mismatch errors
+  // Clear stale MSAL 2.x interaction state — leftover keys can cause
+  // state_mismatch / nonce_mismatch errors in MSAL 1.x
   if (!window.location.hash.includes('id_token')) {
     Object.keys(localStorage).forEach(k => {
       if (k.includes('interaction.status') || k.includes('request.params') ||
-          k.includes('token.keys') || k.includes('account.keys')) {
+          k.includes('msal.token.keys') || k.includes('msal.account.keys')) {
         localStorage.removeItem(k);
       }
     });
@@ -1618,9 +1737,11 @@ function init() {
   try {
     App.msalInstance = new Msal.UserAgentApplication(MSAL_CONFIG);
 
+    // Handle returning from Microsoft sign-in redirect
     App.msalInstance.handleRedirectCallback((error, response) => {
       if (error) {
         console.error('MSAL redirect error:', error.errorCode, error.errorMessage);
+        // Even on error, check if account was cached from a prior session
         const account = App.msalInstance.getAccount();
         if (account && App.userName) {
           App.account = account;
@@ -1635,6 +1756,7 @@ function init() {
         if (App.account && App.userName) {
           goToMain();
         } else if (App.account) {
+          // Account exists but no name yet — go to register
           showScreen('register');
         } else {
           showScreen('signin');
@@ -1642,6 +1764,7 @@ function init() {
       }
     });
 
+    // Decide which screen to show on normal (non-redirect) page loads
     setTimeout(() => {
       if (!App.userName) {
         showScreen('register');
@@ -1658,9 +1781,12 @@ function init() {
 
   } catch (err) {
     console.error('MSAL init error:', err);
-    setTimeout(() => showScreen(App.userName ? 'signin' : 'register'), 1500);
+    setTimeout(() => {
+      showScreen(App.userName ? 'signin' : 'register');
+    }, 1500);
   }
 }
+
 init();
 
 // Register service worker for PWA installability (Add to Home Screen)
