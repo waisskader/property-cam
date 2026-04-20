@@ -1,40 +1,729 @@
 <!DOCTYPE html>
-  <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="theme-color" content="#1a3a5c" />
-    <title>Installer Upload · Prefab Granite Depot</title>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="theme-color" content="#1a3a5c" />
+  <title>Installer Upload · Prefab Granite Depot</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; min-height: 100vh; color: #1a1a2e; -webkit-tap-highlight-color: transparent; }
-        .app-header { background: #1a3a5c; color: white; padding: 16px 20px 14px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 10; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
+      color: #1a1a2e;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ── Header ─────────────────────────────────────────────────────── */
+    .app-header {
+      background: #1a3a5c;
+      color: white;
+      padding: 16px 20px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
     .app-header .logo { font-size: 1.5rem; }
     .app-header h1 { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.2px; }
     .app-header p { font-size: 0.72rem; opacity: 0.65; margin-top: 2px; }
-    .screen { display: none; flex-direction: column; min-height: calc(100vh - 58px); }
+
+    /* ── Screens ─────────────────────────────────────────────────────── */
+    .screen {
+      display: none;
+      flex-direction: column;
+      min-height: calc(100vh - 58px);
+    }
     .screen.active { display: flex; }
-    .card { background: white; border-radius: 16px; padding: 20px; margin: 16px 16px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.07); }
-    .btn { display: block; width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.15s, transform 0.1s; letter-spacing: -0.1px; }
+
+    /* ── Card ────────────────────────────────────────────────────────── */
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      margin: 16px 16px 0;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+    }
+
+    /* ── Buttons ─────────────────────────────────────────────────────── */
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      letter-spacing: -0.1px;
+    }
     .btn:active { transform: scale(0.98); }
-      .btn-primary { background: #e67e22; color: white; }
-          .btn-primary:hover { background: #d35400; }
-          .btn-primary:disabled { background: #cbd5e1; color: #94a3b8; cursor: not-allowed; transform: none; }
-          .btn-ghost { background: #f1f5f9; color: #475569; margin-top: 10px; }
-          #screen-gps { align-items: center; justify-content: center; gap: 20px; padding: 60px 24px; text-align: center; }
-          .spinner-wrap { position: relative; width: 80px; height: 80px; }
-    .spinner-ring { width: 80px; height: 80px; border: 5px solid #e2e8f0; border-top-color: #e67e22; border-radius: 50%; animation: spin 0.9s linear infinite; position: absolute; top: 0; left: 0; }
-    .spinner-dot { width: 20px; height: 20px; background: #1a3a5c; border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+    .btn-primary { background: #e67e22; color: white; }
+    .btn-primary:hover { background: #d35400; }
+    .btn-primary:disabled { background: #cbd5e1; color: #94a3b8; cursor: not-allowed; transform: none; }
+    .btn-ghost { background: #f1f5f9; color: #475569; margin-top: 10px; }
+
+    /* ══════════════════════════════════════════════════════════════════
+       SCREEN 1 — GPS Loading
+    ══════════════════════════════════════════════════════════════════ */
+    #screen-gps {
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      padding: 60px 24px;
+      text-align: center;
+    }
+    .spinner-wrap { position: relative; width: 80px; height: 80px; }
+    .spinner-ring {
+      width: 80px; height: 80px;
+      border: 5px solid #e2e8f0;
+      border-top-color: #e67e22;
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+      position: absolute; top: 0; left: 0;
+    }
+    .spinner-dot {
+      width: 20px; height: 20px;
+      background: #1a3a5c;
+      border-radius: 50%;
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+    }
     @keyframes spin { to { transform: rotate(360deg); } }
-    #gps-status { font-size: 1rem; color: #64748b; line-height: 1.5; max-width: 280px; }
+    #gps-status {
+      font-size: 1rem;
+      color: #64748b;
+      line-height: 1.5;
+      max-width: 280px;
+    }
     #gps-status strong { color: #1a3a5c; display: block; font-size: 1.15rem; margin-bottom: 6px; }
-    .detected-box { background: linear-gradient(135deg, #fff8f0 0%, #fef3e2 100%); border: 2px solid #e67e22; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
-          .detected-label { font-size: 0.68rem; color: #e67e22; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 7px; display: flex; align-items: center; gap: 5px; }
-          .detected-address { font-size: 1.05rem; font-weight: 600; color: #1a1a2e; line-height: 1.4; }
+
+    /* ══════════════════════════════════════════════════════════════════
+       SCREEN 2 — Address Confirmation
+    ══════════════════════════════════════════════════════════════════ */
+    .detected-box {
+      background: linear-gradient(135deg, #fff8f0 0%, #fef3e2 100%);
+      border: 2px solid #e67e22;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .detected-label {
+      font-size: 0.68rem;
+      color: #e67e22;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 7px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .detected-address {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #1a1a2e;
+      line-height: 1.4;
+    }
+
     .sites-section { margin-top: 8px; }
-    .sites-label { font-size: 0.72rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; }
-    .site-item { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1.5px solid #e2e8f0; border-radius: 10px; margin-bottom: 8px; cursor: pointer; font-size: 0.9rem; color: #334155; transition: all 0.15s; }
+    .sites-label {
+      font-size: 0.72rem;
+      color: #94a3b8;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 10px;
+    }
+    .site-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      color: #334155;
+      transition: all 0.15s;
+    }
     .site-item:hover { border-color: #e67e22; background: #fff8f0; }
-          .site-item.selected { border-color: #
+    .site-item.selected { border-color: #e67e22; background: #fff8f0; color: #c0640b; font-weight: 600; }
+    .site-item .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #e2e8f0;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    .site-item.selected .dot { background: #e67e22; }
+
+    #no-gps-note {
+      display: none;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 0.83rem;
+      color: #9a3412;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    /* ══════════════════════════════════════════════════════════════════
+       SCREEN 3 — Camera & Photos
+    ══════════════════════════════════════════════════════════════════ */
+    .address-bar {
+      background: #1a3a5c;
+      color: rgba(255,255,255,0.9);
+      padding: 10px 16px;
+      font-size: 0.82rem;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .address-bar span { opacity: 0.6; font-size: 0.9em; }
+
+    .camera-zone {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 20px 16px;
+      gap: 8px;
+    }
+    .camera-btn {
+      width: 86px; height: 86px;
+      background: #e67e22;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 24px rgba(230,126,34,0.38);
+      transition: transform 0.12s, box-shadow 0.12s;
+    }
+    .camera-btn:active { transform: scale(0.93); box-shadow: 0 2px 10px rgba(230,126,34,0.3); }
+    .camera-btn svg { width: 38px; height: 38px; fill: white; }
+    .camera-hint { font-size: 0.78rem; color: #94a3b8; }
+    .gallery-link {
+      font-size: 0.82rem;
+      color: #64748b;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      background: none;
+      border: none;
+      padding: 4px;
+    }
+
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      padding: 0 16px 12px;
+    }
+    .photo-thumb {
+      aspect-ratio: 1;
+      border-radius: 8px;
+      overflow: hidden;
+      position: relative;
+      background: #e2e8f0;
+    }
+    .photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .photo-remove {
+      position: absolute; top: 4px; right: 4px;
+      background: rgba(0,0,0,0.55);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 22px; height: 22px;
+      font-size: 13px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .upload-footer {
+      background: white;
+      border-top: 1px solid #e2e8f0;
+      padding: 14px 16px;
+      position: sticky;
+      bottom: 0;
+    }
+    .photo-count-label {
+      font-size: 0.78rem;
+      color: #94a3b8;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .photo-count-label strong { color: #e67e22; }
+
+    /* ══════════════════════════════════════════════════════════════════
+       SCREEN 4 — Uploading Progress
+    ══════════════════════════════════════════════════════════════════ */
+    #screen-uploading {
+      align-items: center;
+      justify-content: center;
+      padding: 60px 30px;
+      text-align: center;
+      gap: 12px;
+    }
+    .upload-icon { font-size: 52px; animation: pulse 1.4s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+    .upload-title { font-size: 1.2rem; font-weight: 700; color: #1a1a2e; }
+    .upload-sub { font-size: 0.88rem; color: #64748b; min-height: 22px; }
+    .progress-track {
+      width: 100%;
+      max-width: 300px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      height: 8px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 8px;
+      background: linear-gradient(90deg, #e67e22, #f39c12);
+      border-radius: 999px;
+      transition: width 0.4s ease;
+      width: 0%;
+    }
+
+    /* ══════════════════════════════════════════════════════════════════
+       SCREEN 5 — Success
+    ══════════════════════════════════════════════════════════════════ */
+    #screen-success {
+      align-items: center;
+      justify-content: center;
+      padding: 60px 28px;
+      text-align: center;
+      gap: 10px;
+    }
+    .success-check { font-size: 72px; }
+    .success-title { font-size: 1.45rem; font-weight: 800; color: #16a34a; margin-bottom: 4px; }
+    .success-sub { font-size: 0.92rem; color: #64748b; line-height: 1.6; max-width: 300px; margin-bottom: 24px; }
+    .success-detail {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 0.82rem;
+      color: #15803d;
+      margin-bottom: 24px;
+      text-align: left;
+      width: 100%;
+      max-width: 340px;
+    }
+    .success-detail div { margin-bottom: 4px; }
+    .success-detail div:last-child { margin-bottom: 0; }
+
+    /* ── Error banner ─────────────────────────────────────────────────── */
+    .error-banner {
+      background: #fff1f2;
+      border: 1px solid #fca5a5;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 0.83rem;
+      color: #dc2626;
+      margin: 12px 16px 0;
+      line-height: 1.5;
+    }
+
+    /* hidden file inputs */
+    input[type="file"] { display: none; }
+  </style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="logo">📸</div>
+  <div>
+    <h1>Installer Upload</h1>
+    <p>Prefab Granite Depot · Installation Photos</p>
+  </div>
+</header>
+
+<!-- ═══ SCREEN 1: GPS Loading ═══════════════════════════════════════════════ -->
+<div id="screen-gps" class="screen active">
+  <div class="spinner-wrap">
+    <div class="spinner-ring"></div>
+    <div class="spinner-dot"></div>
+  </div>
+  <div id="gps-status">
+    <strong>Finding your location…</strong>
+    Please allow location access when prompted.
+  </div>
+</div>
+
+<!-- ═══ SCREEN 2: Address Confirmation ══════════════════════════════════════ -->
+<div id="screen-address" class="screen">
+  <div class="card">
+    <div id="no-gps-note">
+      ⚠️ Could not detect your GPS location. Please select the job site from the list below.
+    </div>
+    <div class="detected-box" id="detected-box">
+      <div class="detected-label">
+        <span>📍</span> GPS Detected Address
+      </div>
+      <div class="detected-address" id="detected-address">Detecting…</div>
+    </div>
+    <button class="btn btn-primary" id="btn-use-address" onclick="confirmAddress()">
+      ✓ Use This Address
+    </button>
+  </div>
+
+  <div class="card" id="known-sites-card" style="display:none">
+    <div class="sites-label">Or choose a known job site</div>
+    <div id="sites-list"></div>
+  </div>
+
+  <div id="address-errors"></div>
+</div>
+
+<!-- ═══ SCREEN 3: Camera & Photos ═══════════════════════════════════════════ -->
+<div id="screen-camera" class="screen">
+  <div class="address-bar">
+    <span>📍</span>
+    <span id="camera-address">—</span>
+  </div>
+
+  <div class="camera-zone">
+    <button class="camera-btn" onclick="document.getElementById('input-camera').click()" title="Take photo">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4zM20 4h-3.17L15 2H9L7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/>
+      </svg>
+    </button>
+    <div class="camera-hint">Tap to take a photo</div>
+    <button class="gallery-link" onclick="document.getElementById('input-gallery').click()">
+      Choose from photo library
+    </button>
+  </div>
+
+  <div class="photo-grid" id="photo-grid"></div>
+
+  <div style="flex:1"></div>
+
+  <div class="upload-footer">
+    <div class="photo-count-label" id="photo-count-label">No photos yet — tap the camera button above</div>
+    <button class="btn btn-primary" id="btn-upload" onclick="startUpload()" disabled>
+      Upload Photos to OneDrive
+    </button>
+    <button class="btn btn-ghost" onclick="goBackToAddress()">← Change Job Site</button>
+  </div>
+
+  <!-- Two separate file inputs: camera vs gallery -->
+  <input type="file" id="input-camera" accept="image/*" capture="environment" onchange="addPhotosFromInput(this)">
+  <input type="file" id="input-gallery" accept="image/*" multiple onchange="addPhotosFromInput(this)">
+</div>
+
+<!-- ═══ SCREEN 4: Uploading ══════════════════════════════════════════════════ -->
+<div id="screen-uploading" class="screen">
+  <div class="upload-icon">☁️</div>
+  <div class="upload-title">Uploading…</div>
+  <div class="upload-sub" id="upload-status">Preparing upload…</div>
+  <div class="progress-track">
+    <div class="progress-fill" id="progress-fill"></div>
+  </div>
+</div>
+
+<!-- ═══ SCREEN 5: Success ════════════════════════════════════════════════════ -->
+<div id="screen-success" class="screen">
+  <div class="success-check">✅</div>
+  <div class="success-title">Photos Uploaded!</div>
+  <div class="success-sub">
+    Your installation photos have been saved to OneDrive and the office has been notified.
+  </div>
+  <div class="success-detail" id="success-detail"></div>
+  <div style="width:100%; max-width:340px;">
+    <button class="btn btn-primary" onclick="uploadMore()">📸 Upload More Photos</button>
+    <button class="btn btn-ghost" onclick="goBackToAddress()">← Different Job Site</button>
+  </div>
+</div>
+
+<script>
+// ─── CONFIG — paste your Cloudflare Worker URL below after deploying ─────────
+const WORKER_URL = 'https://mute-butterfly-c397propertycam-installer.waisskader.workers.dev';
+// ─────────────────────────────────────────────────────────────────────────────
+
+const App = {
+  address: null,
+  photos: [],          // [{ file: File, dataUrl: string }]
+  gpsWorked: false,
+};
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('screen-' + id);
+  if (el) el.classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function showError(container, msg) {
+  const div = document.createElement('div');
+  div.className = 'error-banner';
+  div.textContent = msg;
+  const target = document.getElementById(container);
+  if (target) {
+    target.innerHTML = '';
+    target.appendChild(div);
+    setTimeout(() => div.remove(), 7000);
+  }
+}
+
+// ── Screen 1: GPS ─────────────────────────────────────────────────────────────
+async function init() {
+  showScreen('gps');
+
+  // Start fetching known sites in background
+  fetchKnownSites();
+
+  if (!navigator.geolocation) {
+    setGpsStatus('GPS not supported on this device.', false);
+    setTimeout(() => showScreen('address'), 1500);
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      setGpsStatus('Detecting street address…', true);
+      try {
+        const addr = await reverseGeocode(pos.coords.latitude, pos.coords.longitude);
+        if (addr) {
+          App.address = addr;
+          App.gpsWorked = true;
+          document.getElementById('detected-address').textContent = addr;
+          document.getElementById('detected-box').style.display = '';
+          document.getElementById('no-gps-note').style.display = 'none';
+        } else {
+          throw new Error('empty address');
+        }
+      } catch {
+        App.gpsWorked = false;
+        document.getElementById('detected-box').style.display = 'none';
+        document.getElementById('no-gps-note').style.display = 'block';
+      }
+      showScreen('address');
+    },
+    (err) => {
+      App.gpsWorked = false;
+      document.getElementById('detected-box').style.display = 'none';
+      document.getElementById('no-gps-note').style.display = 'block';
+      showScreen('address');
+    },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 }
+  );
+}
+
+function setGpsStatus(msg, loading) {
+  const el = document.getElementById('gps-status');
+  el.innerHTML = loading ? `<strong>Finding your location…</strong>${msg}` : msg;
+}
+
+// ── Reverse Geocode via Nominatim ─────────────────────────────────────────────
+async function reverseGeocode(lat, lon) {
+  const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`;
+  const res = await fetch(url, {
+    headers: { 'Accept-Language': 'en-US,en', 'User-Agent': 'PropertyCam-Installer/1.0' },
+  });
+  if (!res.ok) throw new Error('Geocode failed');
+  const data = await res.json();
+  const a = data.address || {};
+  const num   = a.house_number || '';
+  const road  = a.road || a.pedestrian || a.path || '';
+  const city  = a.city || a.town || a.village || a.suburb || '';
+  const state = a.state_code || a.state || '';
+  const parts = [num && road ? `${num} ${road}` : road, city, state].filter(Boolean);
+  return parts.join(', ');
+}
+
+// ── Fetch known job sites from Worker ─────────────────────────────────────────
+async function fetchKnownSites() {
+  try {
+    const res = await fetch(`${WORKER_URL}/addresses`, { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.addresses || data.addresses.length === 0) return;
+
+    const card = document.getElementById('known-sites-card');
+    const list = document.getElementById('sites-list');
+    list.innerHTML = '';
+    data.addresses.sort().forEach(addr => {
+      const item = document.createElement('div');
+      item.className = 'site-item';
+      item.innerHTML = `<span class="dot"></span><span>${addr}</span>`;
+      item.onclick = () => selectSite(addr, item);
+      list.appendChild(item);
+    });
+    card.style.display = 'block';
+  } catch {
+    // Silently fail — known sites are a convenience, not required
+  }
+}
+
+function selectSite(addr, el) {
+  document.querySelectorAll('.site-item').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+  App.address = addr;
+  // Update detected box to show selected address
+  document.getElementById('detected-address').textContent = addr;
+  document.getElementById('detected-box').style.display = '';
+}
+
+// ── Screen 2: Address Confirmation ────────────────────────────────────────────
+function confirmAddress() {
+  if (!App.address) {
+    showError('address-errors', 'Please select a job site from the list below.');
+    return;
+  }
+  document.getElementById('camera-address').textContent = App.address;
+  App.photos = [];
+  renderGrid();
+  refreshUploadBtn();
+  showScreen('camera');
+}
+
+function goBackToAddress() {
+  showScreen('address');
+}
+
+// ── Screen 3: Camera & Photos ─────────────────────────────────────────────────
+function addPhotosFromInput(input) {
+  const files = Array.from(input.files || []);
+  if (!files.length) return;
+
+  let loaded = 0;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      App.photos.push({ file, dataUrl: e.target.result });
+      loaded++;
+      if (loaded === files.length) {
+        renderGrid();
+        refreshUploadBtn();
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+
+  input.value = ''; // Reset so same file can be re-selected
+}
+
+function removePhoto(idx) {
+  App.photos.splice(idx, 1);
+  renderGrid();
+  refreshUploadBtn();
+}
+
+function renderGrid() {
+  const grid = document.getElementById('photo-grid');
+  grid.innerHTML = '';
+  App.photos.forEach((p, i) => {
+    const thumb = document.createElement('div');
+    thumb.className = 'photo-thumb';
+    thumb.innerHTML = `
+      <img src="${p.dataUrl}" alt="Photo ${i + 1}" loading="lazy">
+      <button class="photo-remove" onclick="removePhoto(${i})" title="Remove">×</button>
+    `;
+    grid.appendChild(thumb);
+  });
+}
+
+function refreshUploadBtn() {
+  const n = App.photos.length;
+  const label = document.getElementById('photo-count-label');
+  const btn   = document.getElementById('btn-upload');
+  if (n === 0) {
+    label.innerHTML = 'No photos yet — tap the camera button above';
+    btn.disabled = true;
+  } else {
+    label.innerHTML = `<strong>${n} photo${n > 1 ? 's' : ''}</strong> ready to upload`;
+    btn.disabled = false;
+  }
+}
+
+// ── Screen 4: Upload ──────────────────────────────────────────────────────────
+async function startUpload() {
+  if (!App.photos.length) return;
+
+  const total = App.photos.length;
+  const address = App.address;
+
+  showScreen('uploading');
+
+  const setStatus = (msg, pct) => {
+    document.getElementById('upload-status').textContent = msg;
+    document.getElementById('progress-fill').style.width = `${pct}%`;
+  };
+
+  try {
+    for (let i = 0; i < App.photos.length; i++) {
+      setStatus(`Uploading photo ${i + 1} of ${total}…`, Math.round(((i) / total) * 90));
+
+      const form = new FormData();
+      form.append('address', address);
+      form.append('photoIndex', String(i));
+      form.append('totalPhotos', String(total));
+      form.append('photo', App.photos[i].file);
+
+      const res = await fetch(`${WORKER_URL}/upload`, {
+        method: 'POST',
+        body: form,
+      });
+
+      if (!res.ok) {
+        let errMsg = `Server error (${res.status})`;
+        try { const d = await res.json(); errMsg = d.error || errMsg; } catch {}
+        throw new Error(errMsg);
+      }
+    }
+
+    setStatus('All done!', 100);
+
+    // Build success detail
+    const now = new Date().toLocaleString('en-US', {
+      month: 'short', day: 'numeric', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    });
+    document.getElementById('success-detail').innerHTML = `
+      <div>📍 <strong>Address:</strong> ${address}</div>
+      <div>📷 <strong>Photos:</strong> ${total} uploaded</div>
+      <div>🕐 <strong>Time:</strong> ${now}</div>
+      <div>📧 <strong>Notification:</strong> Sent to office</div>
+    `;
+
+    setTimeout(() => showScreen('success'), 400);
+
+  } catch (err) {
+    // Go back to camera and show error
+    showScreen('camera');
+    showError('address-errors', `Upload failed: ${err.message}. Please check your connection and try again.`);
+  }
+}
+
+// ── Screen 5: Success / Upload More ───────────────────────────────────────────
+function uploadMore() {
+  App.photos = [];
+  document.getElementById('camera-address').textContent = App.address;
+  renderGrid();
+  refreshUploadBtn();
+  showScreen('camera');
+}
+
+// ── Start ─────────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
