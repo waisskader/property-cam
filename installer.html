@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="theme-color" content="#1a3a5c" />
-  <title>Installer Upload · Prefab Granite Depot</title>
+  <title>Job Site Upload Â· Prefab Granite Depot</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -18,7 +18,7 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* ── Header ─────────────────────────────────────────────────────── */
+    /* ââ Header âââââââââââââââââââââââââââââââââââââââââââââââââââââââ */
     .app-header {
       background: #1a3a5c;
       color: white;
@@ -34,7 +34,7 @@
     .app-header h1 { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.2px; }
     .app-header p { font-size: 0.72rem; opacity: 0.65; margin-top: 2px; }
 
-    /* ── Screens ─────────────────────────────────────────────────────── */
+    /* ââ Screens âââââââââââââââââââââââââââââââââââââââââââââââââââââââ */
     .screen {
       display: none;
       flex-direction: column;
@@ -42,7 +42,7 @@
     }
     .screen.active { display: flex; }
 
-    /* ── Card ────────────────────────────────────────────────────────── */
+    /* ââ Card ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ */
     .card {
       background: white;
       border-radius: 16px;
@@ -51,7 +51,7 @@
       box-shadow: 0 2px 10px rgba(0,0,0,0.07);
     }
 
-    /* ── Buttons ─────────────────────────────────────────────────────── */
+    /* ââ Buttons âââââââââââââââââââââââââââââââââââââââââââââââââââââââ */
     .btn {
       display: block;
       width: 100%;
@@ -70,9 +70,9 @@
     .btn-primary:disabled { background: #cbd5e1; color: #94a3b8; cursor: not-allowed; transform: none; }
     .btn-ghost { background: #f1f5f9; color: #475569; margin-top: 10px; }
 
-    /* ══════════════════════════════════════════════════════════════════
-       SCREEN 1 — GPS Loading
-    ══════════════════════════════════════════════════════════════════ */
+    /* ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+       SCREEN 1 â GPS Loading
+    ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ */
     #screen-gps {
       align-items: center;
       justify-content: center;
@@ -106,9 +106,9 @@
     }
     #gps-status strong { color: #1a3a5c; display: block; font-size: 1.15rem; margin-bottom: 6px; }
 
-    /* ══════════════════════════════════════════════════════════════════
-       SCREEN 2 — Address Confirmation
-    ══════════════════════════════════════════════════════════════════ */
+    /* ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+       SCREEN 2 â Address Confirmation
+    ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ */
     .detected-box {
       background: linear-gradient(135deg, #fff8f0 0%, #fef3e2 100%);
       border: 2px solid #e67e22;
@@ -133,8 +133,64 @@
       color: #1a1a2e;
       line-height: 1.4;
     }
+    .detected-customer {
+      font-size: 0.85rem;
+      color: #16a34a;
+      font-weight: 600;
+      margin-top: 6px;
+      display: none;
+    }
+    .detected-customer.visible { display: block; }
 
-    .sites-section { margin-top: 8px; }
+    /* ââ New-customer name form ââââââââââââââââââââââââââââââââââââââââ */
+    .new-job-section {
+      display: none;
+      margin-top: 4px;
+      padding-top: 14px;
+      border-top: 1.5px dashed #fed7aa;
+    }
+    .new-job-section.visible { display: block; }
+    .new-job-label {
+      font-size: 0.68rem;
+      color: #e67e22;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 10px;
+    }
+    .name-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .name-field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .name-field label {
+      font-size: 0.68rem;
+      color: #64748b;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .name-field input {
+      display: block !important;
+      width: 100%;
+      padding: 12px 12px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      color: #1a1a2e;
+      outline: none;
+      transition: border-color 0.15s;
+      background: white;
+    }
+    .name-field input:focus { border-color: #e67e22; }
+
+    /* ââ Known-sites list (with customer name) ââââââââââââââââââââââââ */
     .sites-label {
       font-size: 0.72rem;
       color: #94a3b8;
@@ -152,12 +208,10 @@
       border-radius: 10px;
       margin-bottom: 8px;
       cursor: pointer;
-      font-size: 0.9rem;
-      color: #334155;
       transition: all 0.15s;
     }
     .site-item:hover { border-color: #e67e22; background: #fff8f0; }
-    .site-item.selected { border-color: #e67e22; background: #fff8f0; color: #c0640b; font-weight: 600; }
+    .site-item.selected { border-color: #e67e22; background: #fff8f0; }
     .site-item .dot {
       width: 8px; height: 8px;
       border-radius: 50%;
@@ -166,6 +220,10 @@
       transition: background 0.15s;
     }
     .site-item.selected .dot { background: #e67e22; }
+    .site-item .site-info { flex: 1; }
+    .site-item .site-name { font-size: 0.9rem; font-weight: 600; color: #1a1a2e; }
+    .site-item .site-addr { font-size: 0.75rem; color: #64748b; margin-top: 2px; }
+    .site-item.selected .site-name { color: #c0640b; }
 
     #no-gps-note {
       display: none;
@@ -179,19 +237,17 @@
       line-height: 1.5;
     }
 
-    /* ══════════════════════════════════════════════════════════════════
-       SCREEN 3 — Camera & Photos
-    ══════════════════════════════════════════════════════════════════ */
+    /* ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+       SCREEN 3 â Camera & Photos
+    ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ */
     .address-bar {
       background: #1a3a5c;
       color: rgba(255,255,255,0.9);
       padding: 10px 16px;
       font-size: 0.82rem;
-      display: flex;
-      align-items: center;
-      gap: 7px;
     }
-    .address-bar span { opacity: 0.6; font-size: 0.9em; }
+    .address-bar .bar-customer { font-weight: 700; font-size: 0.9rem; }
+    .address-bar .bar-addr { opacity: 0.7; font-size: 0.78rem; margin-top: 2px; }
 
     .camera-zone {
       display: flex;
@@ -270,9 +326,9 @@
     }
     .photo-count-label strong { color: #e67e22; }
 
-    /* ══════════════════════════════════════════════════════════════════
-       SCREEN 4 — Uploading Progress
-    ══════════════════════════════════════════════════════════════════ */
+    /* ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+       SCREEN 4 â Uploading Progress
+    ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ */
     #screen-uploading {
       align-items: center;
       justify-content: center;
@@ -301,9 +357,9 @@
       width: 0%;
     }
 
-    /* ══════════════════════════════════════════════════════════════════
-       SCREEN 5 — Success
-    ══════════════════════════════════════════════════════════════════ */
+    /* ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+       SCREEN 5 â Success
+    ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ */
     #screen-success {
       align-items: center;
       justify-content: center;
@@ -329,7 +385,7 @@
     .success-detail div { margin-bottom: 4px; }
     .success-detail div:last-child { margin-bottom: 0; }
 
-    /* ── Error banner ─────────────────────────────────────────────────── */
+    /* ââ Error banner âââââââââââââââââââââââââââââââââââââââââââââââââââ */
     .error-banner {
       background: #fff1f2;
       border: 1px solid #fca5a5;
@@ -348,39 +404,56 @@
 <body>
 
 <header class="app-header">
-  <div class="logo">📸</div>
+  <div class="logo">ð¸</div>
   <div>
-    <h1>Installer Upload</h1>
-    <p>Prefab Granite Depot · Installation Photos</p>
+    <h1>Job Site Upload</h1>
+    <p>Prefab Granite Depot Â· Installation Photos</p>
   </div>
 </header>
 
-<!-- ═══ SCREEN 1: GPS Loading ═══════════════════════════════════════════════ -->
+<!-- âââ SCREEN 1: GPS Loading âââââââââââââââââââââââââââââââââââââââââââââââ -->
 <div id="screen-gps" class="screen active">
   <div class="spinner-wrap">
     <div class="spinner-ring"></div>
     <div class="spinner-dot"></div>
   </div>
   <div id="gps-status">
-    <strong>Finding your location…</strong>
+    <strong>Finding your locationâ¦</strong>
     Please allow location access when prompted.
   </div>
 </div>
 
-<!-- ═══ SCREEN 2: Address Confirmation ══════════════════════════════════════ -->
+<!-- âââ SCREEN 2: Address Confirmation ââââââââââââââââââââââââââââââââââââââ -->
 <div id="screen-address" class="screen">
   <div class="card">
     <div id="no-gps-note">
-      ⚠️ Could not detect your GPS location. Please select the job site from the list below.
+      â ï¸ Could not detect your GPS location. Please select the job site from the list below.
     </div>
     <div class="detected-box" id="detected-box">
       <div class="detected-label">
-        <span>📍</span> GPS Detected Address
+        <span>ð</span> GPS Detected Address
       </div>
-      <div class="detected-address" id="detected-address">Detecting…</div>
+      <div class="detected-address" id="detected-address">Detectingâ¦</div>
+      <div class="detected-customer" id="detected-customer"></div>
+
+      <!-- Shown only when this is a NEW address not yet in OneDrive -->
+      <div class="new-job-section" id="new-job-section">
+        <div class="new-job-label">â¦ New Job â Enter Customer Name</div>
+        <div class="name-row">
+          <div class="name-field">
+            <label for="input-last-name">Last Name</label>
+            <input type="text" id="input-last-name" placeholder="Smith" autocomplete="off" />
+          </div>
+          <div class="name-field">
+            <label for="input-first-name">First Name</label>
+            <input type="text" id="input-first-name" placeholder="John" autocomplete="off" />
+          </div>
+        </div>
+      </div>
     </div>
+
     <button class="btn btn-primary" id="btn-use-address" onclick="confirmAddress()">
-      ✓ Use This Address
+      â Use This Address
     </button>
   </div>
 
@@ -392,11 +465,11 @@
   <div id="address-errors"></div>
 </div>
 
-<!-- ═══ SCREEN 3: Camera & Photos ═══════════════════════════════════════════ -->
+<!-- âââ SCREEN 3: Camera & Photos âââââââââââââââââââââââââââââââââââââââââââ -->
 <div id="screen-camera" class="screen">
   <div class="address-bar">
-    <span>📍</span>
-    <span id="camera-address">—</span>
+    <div class="bar-customer" id="bar-customer"></div>
+    <div class="bar-addr" id="bar-addr"></div>
   </div>
 
   <div class="camera-zone">
@@ -416,54 +489,54 @@
   <div style="flex:1"></div>
 
   <div class="upload-footer">
-    <div class="photo-count-label" id="photo-count-label">No photos yet — tap the camera button above</div>
+    <div class="photo-count-label" id="photo-count-label">No photos yet â tap the camera button above</div>
     <button class="btn btn-primary" id="btn-upload" onclick="startUpload()" disabled>
       Upload Photos to OneDrive
     </button>
-    <button class="btn btn-ghost" onclick="goBackToAddress()">← Change Job Site</button>
+    <button class="btn btn-ghost" onclick="goBackToAddress()">â Change Job Site</button>
   </div>
 
-  <!-- Two separate file inputs: camera vs gallery -->
   <input type="file" id="input-camera" accept="image/*" capture="environment" onchange="addPhotosFromInput(this)">
   <input type="file" id="input-gallery" accept="image/*" multiple onchange="addPhotosFromInput(this)">
 </div>
 
-<!-- ═══ SCREEN 4: Uploading ══════════════════════════════════════════════════ -->
+<!-- âââ SCREEN 4: Uploading ââââââââââââââââââââââââââââââââââââââââââââââââââ -->
 <div id="screen-uploading" class="screen">
-  <div class="upload-icon">☁️</div>
-  <div class="upload-title">Uploading…</div>
-  <div class="upload-sub" id="upload-status">Preparing upload…</div>
+  <div class="upload-icon">âï¸</div>
+  <div class="upload-title">Uploadingâ¦</div>
+  <div class="upload-sub" id="upload-status">Preparing uploadâ¦</div>
   <div class="progress-track">
     <div class="progress-fill" id="progress-fill"></div>
   </div>
 </div>
 
-<!-- ═══ SCREEN 5: Success ════════════════════════════════════════════════════ -->
+<!-- âââ SCREEN 5: Success ââââââââââââââââââââââââââââââââââââââââââââââââââââ -->
 <div id="screen-success" class="screen">
-  <div class="success-check">✅</div>
+  <div class="success-check">â</div>
   <div class="success-title">Photos Uploaded!</div>
   <div class="success-sub">
-    Your installation photos have been saved to OneDrive and the office has been notified.
+    Photos saved to OneDrive under Documents / PGD job site and the office has been notified.
   </div>
   <div class="success-detail" id="success-detail"></div>
   <div style="width:100%; max-width:340px;">
-    <button class="btn btn-primary" onclick="uploadMore()">📸 Upload More Photos</button>
-    <button class="btn btn-ghost" onclick="goBackToAddress()">← Different Job Site</button>
+    <button class="btn btn-primary" onclick="uploadMore()">ð¸ Upload More Photos</button>
+    <button class="btn btn-ghost" onclick="goBackToAddress()">â Different Job Site</button>
   </div>
 </div>
 
 <script>
-// ─── CONFIG — paste your Cloudflare Worker URL below after deploying ─────────
+// âââ CONFIG ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 const WORKER_URL = 'https://mute-butterfly-c397propertycam-installer.waisskader.workers.dev';
-// ─────────────────────────────────────────────────────────────────────────────
 
 const App = {
-  address: null,
-  photos: [],          // [{ file: File, dataUrl: string }]
-  gpsWorked: false,
+  address: null,      // GPS / selected address string
+  folderName: null,   // Full folder name: "Smith John - 123 Main St, City, CA"
+  isNewJob: false,    // True when address not found in existing folders
+  photos: [],         // [{ file: File, dataUrl: string }]
+  knownFolders: [],   // folder name strings from Worker
 };
 
-// ── Utilities ─────────────────────────────────────────────────────────────────
+// ââ Helpers ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const el = document.getElementById('screen-' + id);
@@ -483,12 +556,29 @@ function showError(container, msg) {
   }
 }
 
-// ── Screen 1: GPS ─────────────────────────────────────────────────────────────
+// Extract the address portion from a folder name ("Smith John - 123 Main St" â "123 Main St")
+function addrFromFolder(f) {
+  const i = f.indexOf(' - ');
+  return i !== -1 ? f.slice(i + 3).trim() : f.trim();
+}
+
+// Extract customer name ("Smith John - 123 Main St" â "Smith John")
+function customerFromFolder(f) {
+  const i = f.indexOf(' - ');
+  return i !== -1 ? f.slice(0, i).trim() : '';
+}
+
+// Find existing folder whose address matches the GPS address (case-insensitive)
+function matchFolder(gpsAddr) {
+  if (!gpsAddr) return null;
+  const norm = gpsAddr.toLowerCase().trim();
+  return App.knownFolders.find(f => addrFromFolder(f).toLowerCase() === norm) || null;
+}
+
+// ââ Screen 1: GPS âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 async function init() {
   showScreen('gps');
-
-  // Start fetching known sites in background
-  fetchKnownSites();
+  fetchKnownSites();   // load in background
 
   if (!navigator.geolocation) {
     setGpsStatus('GPS not supported on this device.', false);
@@ -498,27 +588,25 @@ async function init() {
 
   navigator.geolocation.getCurrentPosition(
     async (pos) => {
-      setGpsStatus('Detecting street address…', true);
+      setGpsStatus('Detecting street addressâ¦', true);
       try {
         const addr = await reverseGeocode(pos.coords.latitude, pos.coords.longitude);
         if (addr) {
           App.address = addr;
-          App.gpsWorked = true;
           document.getElementById('detected-address').textContent = addr;
           document.getElementById('detected-box').style.display = '';
           document.getElementById('no-gps-note').style.display = 'none';
+          applyAddressToUI(addr);
         } else {
           throw new Error('empty address');
         }
       } catch {
-        App.gpsWorked = false;
         document.getElementById('detected-box').style.display = 'none';
         document.getElementById('no-gps-note').style.display = 'block';
       }
       showScreen('address');
     },
-    (err) => {
-      App.gpsWorked = false;
+    () => {
       document.getElementById('detected-box').style.display = 'none';
       document.getElementById('no-gps-note').style.display = 'block';
       showScreen('address');
@@ -529,16 +617,38 @@ async function init() {
 
 function setGpsStatus(msg, loading) {
   const el = document.getElementById('gps-status');
-  el.innerHTML = loading ? `<strong>Finding your location…</strong>${msg}` : msg;
+  el.innerHTML = loading ? `<strong>Finding your locationâ¦</strong>${msg}` : msg;
 }
 
-// ── Reverse Geocode via Nominatim ─────────────────────────────────────────────
+// Called when we have an address â checks if it's new or returning job
+function applyAddressToUI(addr) {
+  const match = matchFolder(addr);
+  const customerEl = document.getElementById('detected-customer');
+  const newJobEl   = document.getElementById('new-job-section');
+
+  if (match) {
+    // Returning job â show customer name in green
+    App.folderName = match;
+    App.isNewJob = false;
+    customerEl.textContent = 'ð¤ ' + customerFromFolder(match);
+    customerEl.classList.add('visible');
+    newJobEl.classList.remove('visible');
+  } else {
+    // New job â show name input form
+    App.folderName = null;
+    App.isNewJob = true;
+    customerEl.classList.remove('visible');
+    newJobEl.classList.add('visible');
+  }
+}
+
+// ââ Reverse Geocode via Nominatim âââââââââââââââââââââââââââââââââââââââââââââ
 async function reverseGeocode(lat, lon) {
   const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`;
   const res = await fetch(url, {
     headers: { 'Accept-Language': 'en-US,en', 'User-Agent': 'PropertyCam-Installer/1.0' },
   });
-  if (!res.ok) throw new Error('Geocode failed');
+  if (!res.ok) throw new Error('G%ocode failed');
   const data = await res.json();
   const a = data.address || {};
   const num   = a.house_number || '';
@@ -549,46 +659,90 @@ async function reverseGeocode(lat, lon) {
   return parts.join(', ');
 }
 
-// ── Fetch known job sites from Worker ─────────────────────────────────────────
+// ââ Fetch known job folders from Worker âââââââââââââââââââââââââââââââââââââââ
 async function fetchKnownSites() {
   try {
     const res = await fetch(`${WORKER_URL}/addresses`, { signal: AbortSignal.timeout(8000) });
     if (!res.ok) return;
     const data = await res.json();
-    if (!data.addresses || data.addresses.length === 0) return;
 
+    // Support both old format (data.addresses) and new (data.folders)
+    const folders = data.folders || data.addresses || [];
+    if (!folders.length) return;
+
+    App.knownFolders = folders;
+
+    // If GPS already set an address, re-apply to check for match now that folders loaded
+    if (App.address) applyAddressToUI(App.address);
+
+    // Build the known-sites list
     const card = document.getElementById('known-sites-card');
     const list = document.getElementById('sites-list');
     list.innerHTML = '';
-    data.addresses.sort().forEach(addr => {
+    folders.slice().sort().forEach(folder => {
+      const customer = customerFromFolder(folder);
+      const addr     = addrFromFolder(folder);
       const item = document.createElement('div');
       item.className = 'site-item';
-      item.innerHTML = `<span class="dot"></span><span>${addr}</span>`;
-      item.onclick = () => selectSite(addr, item);
+      item.innerHTML = `
+        <span class="dot"></span>
+        <div class="site-info">
+          <div class="site-name">${customer || folder}</div>
+          ${customer ? `<div class="site-addr">${addr}</div>` : ''}
+        </div>`;
+      item.onclick = () => selectSite(folder, item);
       list.appendChild(item);
     });
     card.style.display = 'block';
   } catch {
-    // Silently fail — known sites are a convenience, not required
+    // Silently fail â list is a convenience
   }
 }
 
-function selectSite(addr, el) {
+function selectSite(folder, el) {
   document.querySelectorAll('.site-item').forEach(s => s.classList.remove('selected'));
   el.classList.add('selected');
-  App.address = addr;
-  // Update detected box to show selected address
-  document.getElementById('detected-address').textContent = addr;
+  App.folderName = folder;
+  App.address    = addrFromFolder(folder);
+  App.isNewJob   = false;
+
+  // Update detected box
+  const customer = customerFromFolder(folder);
+  document.getElementById('detected-address').textContent = App.address;
+  document.getElementById('detected-customer').textContent = 'ð¤ ' + customer;
+  document.getElementById('detected-customer').classList.add('visible');
+  document.getElementById('new-job-section').classList.remove('visible');
   document.getElementById('detected-box').style.display = '';
 }
 
-// ── Screen 2: Address Confirmation ────────────────────────────────────────────
+// ââ Screen 2: Confirm address âââââââââââââââââââââââââââââââââââââââââââââââââ
 function confirmAddress() {
   if (!App.address) {
     showError('address-errors', 'Please select a job site from the list below.');
     return;
   }
-  document.getElementById('camera-address').textContent = App.address;
+
+  if (App.isNewJob) {
+    // Validate name fields
+    const last  = document.getElementById('input-last-name').value.trim();
+    const first = document.getElementById('input-first-name').value.trim();
+    if (!last || !first) {
+      showError('address-errors', 'Please enter the customer\'s last name and first name.');
+      return;
+    }
+    App.folderName = `${last} ${first} - ${App.address}`;
+  }
+
+  if (!App.folderName) {
+    showError('address-errors', 'Could not determine folder name. Please try again.');
+    return;
+  }
+
+  // Update camera screen header
+  const customer = customerFromFolder(App.folderName);
+  document.getElementById('bar-customer').textContent = customer || App.folderName;
+  document.getElementById('bar-addr').textContent = App.address;
+
   App.photos = [];
   renderGrid();
   refreshUploadBtn();
@@ -599,26 +753,21 @@ function goBackToAddress() {
   showScreen('address');
 }
 
-// ── Screen 3: Camera & Photos ─────────────────────────────────────────────────
+// ââ Screen 3: Camera & Photos âââââââââââââââââââââââââââââââââââââââââââââââââ
 function addPhotosFromInput(input) {
   const files = Array.from(input.files || []);
   if (!files.length) return;
-
   let loaded = 0;
   files.forEach(file => {
     const reader = new FileReader();
     reader.onload = (e) => {
       App.photos.push({ file, dataUrl: e.target.result });
       loaded++;
-      if (loaded === files.length) {
-        renderGrid();
-        refreshUploadBtn();
-      }
+      if (loaded === files.length) { renderGrid(); refreshUploadBtn(); }
     };
     reader.readAsDataURL(file);
   });
-
-  input.value = ''; // Reset so same file can be re-selected
+  input.value = '';
 }
 
 function removePhoto(idx) {
@@ -635,8 +784,7 @@ function renderGrid() {
     thumb.className = 'photo-thumb';
     thumb.innerHTML = `
       <img src="${p.dataUrl}" alt="Photo ${i + 1}" loading="lazy">
-      <button class="photo-remove" onclick="removePhoto(${i})" title="Remove">×</button>
-    `;
+      <button class="photo-remove" onclick="removePhoto(${i})" title="Remove">Ã</button>`;
     grid.appendChild(thumb);
   });
 }
@@ -646,7 +794,7 @@ function refreshUploadBtn() {
   const label = document.getElementById('photo-count-label');
   const btn   = document.getElementById('btn-upload');
   if (n === 0) {
-    label.innerHTML = 'No photos yet — tap the camera button above';
+    label.innerHTML = 'No photos yet â tap the camera button above';
     btn.disabled = true;
   } else {
     label.innerHTML = `<strong>${n} photo${n > 1 ? 's' : ''}</strong> ready to upload`;
@@ -654,12 +802,12 @@ function refreshUploadBtn() {
   }
 }
 
-// ── Screen 4: Upload ──────────────────────────────────────────────────────────
+// ââ Screen 4: Upload ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 async function startUpload() {
   if (!App.photos.length) return;
 
-  const total = App.photos.length;
-  const address = App.address;
+  const total      = App.photos.length;
+  const folderName = App.folderName;
 
   showScreen('uploading');
 
@@ -670,18 +818,15 @@ async function startUpload() {
 
   try {
     for (let i = 0; i < App.photos.length; i++) {
-      setStatus(`Uploading photo ${i + 1} of ${total}…`, Math.round(((i) / total) * 90));
+      setStatus(`Uploading photo ${i + 1} of ${total}â¦`, Math.round((i / total) * 90));
 
       const form = new FormData();
-      form.append('address', address);
-      form.append('photoIndex', String(i));
-      form.append('totalPhotos', String(total));
-      form.append('photo', App.photos[i].file);
+      form.append('folderName',   folderName);
+      form.append('photoIndex',   String(i));
+      form.append('totalPhotos',  String(total));
+      form.append('photo',        App.photos[i].file);
 
-      const res = await fetch(`${WORKER_URL}/upload`, {
-        method: 'POST',
-        body: form,
-      });
+      const res = await fetch(`${WORKER_URL}/upload`, { method: 'POST', body: form });
 
       if (!res.ok) {
         let errMsg = `Server error (${res.status})`;
@@ -692,37 +837,35 @@ async function startUpload() {
 
     setStatus('All done!', 100);
 
-    // Build success detail
     const now = new Date().toLocaleString('en-US', {
       month: 'short', day: 'numeric', year: 'numeric',
       hour: '2-digit', minute: '2-digit',
     });
+    const customer = customerFromFolder(folderName);
     document.getElementById('success-detail').innerHTML = `
-      <div>📍 <strong>Address:</strong> ${address}</div>
-      <div>📷 <strong>Photos:</strong> ${total} uploaded</div>
-      <div>🕐 <strong>Time:</strong> ${now}</div>
-      <div>📧 <strong>Notification:</strong> Sent to office</div>
-    `;
+      <div>ð¤ <strong>Customer:</strong> ${customer}</div>
+      <div>ð <strong>Address:</strong> ${App.address}</div>
+      <div>ð· <strong>Photos:</strong> ${total} uploaded</div>
+      <div>ð <strong>Time:</strong> ${now}</div>
+      <div>ð§ <strong>Notification:</strong> Sent to office</div>`;
 
     setTimeout(() => showScreen('success'), 400);
 
   } catch (err) {
-    // Go back to camera and show error
     showScreen('camera');
     showError('address-errors', `Upload failed: ${err.message}. Please check your connection and try again.`);
   }
 }
 
-// ── Screen 5: Success / Upload More ───────────────────────────────────────────
+// ââ Screen 5: Upload More âââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function uploadMore() {
   App.photos = [];
-  document.getElementById('camera-address').textContent = App.address;
   renderGrid();
   refreshUploadBtn();
   showScreen('camera');
 }
 
-// ── Start ─────────────────────────────────────────────────────────────────────
+// ââ Start âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 init();
 </script>
 </body>
