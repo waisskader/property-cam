@@ -932,7 +932,7 @@ function addPhotosFromInput(input) {
   files.forEach(file => {
     const reader = new FileReader();
     reader.onload = async (e) => {
-      const dataUrl = e.target.result; const jpegBlob = await new Promise(res => { const img = new Image(); img.onload = () => { const c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight; c.getContext('2d').drawImage(img, 0, 0); c.toBlob(res, 'image/jpeg', 0.92); }; img.src = dataUrl; }); const jpegFile = new File([jpegBlob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }); App.photos.push({ file: jpegFile, dataUrl });
+      const dataUrl = e.target.result; const jpegBlob = await new Promise(res => { const img = new Image(); img.onload = () => { const MAX = 2048; const scale = Math.min(1, MAX / Math.max(img.naturalWidth, img.naturalHeight)); const w = Math.round(img.naturalWidth * scale); const h = Math.round(img.naturalHeight * scale); const c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(img, 0, 0, w, h); c.toBlob(res, 'image/jpeg', 0.88); }; img.src = dataUrl; }); const jpegFile = new File([jpegBlob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }); App.photos.push({ file: jpegFile, dataUrl });
       loaded++;
       if (loaded === files.length) { renderGrid(); refreshUploadBtn(); }
     };
