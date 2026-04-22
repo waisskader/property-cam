@@ -931,8 +931,8 @@ function addPhotosFromInput(input) {
   let loaded = 0;
   files.forEach(file => {
     const reader = new FileReader();
-    reader.onload = (e) => {
-      App.photos.push({ file, dataUrl: e.target.result });
+    reader.onload = async (e) => {
+      const dataUrl = e.target.result; const jpegBlob = await new Promise(res => { const img = new Image(); img.onload = () => { const c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight; c.getContext('2d').drawImage(img, 0, 0); c.toBlob(res, 'image/jpeg', 0.92); }; img.src = dataUrl; }); const jpegFile = new File([jpegBlob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }); App.photos.push({ file: jpegFile, dataUrl });
       loaded++;
       if (loaded === files.length) { renderGrid(); refreshUploadBtn(); }
     };
