@@ -628,7 +628,7 @@
   <div class="upload-footer">
     <div class="photo-count-label" id="photo-count-label">No photos yet — tap the camera button above</div>
     <button class="btn btn-primary" id="btn-upload" onclick="startUpload()" disabled>
-      Upload Photos to OneDrive
+      Upload Photos to SharePoint
     </button>
     <button class="btn btn-ghost" onclick="goBackToAddress()">← Change Job Site</button>
   </div>
@@ -652,7 +652,7 @@
   <div class="success-check">✅</div>
   <div class="success-title">Photos Uploaded!</div>
   <div class="success-sub">
-    Photos saved to OneDrive under Documents / PGD job site and the office has been notified.
+    Photos saved to SharePoint · PGD Job Site Docs and the office has been notified.
   </div>
   <div class="success-detail" id="success-detail"></div>
   <div style="width:100%; max-width:340px;">
@@ -666,7 +666,7 @@
   <div class="folders-header">
     <div class="folders-title-wrap">
       <div class="folders-title">📁 Job Site Folders</div>
-      <div class="folders-sub">All OneDrive folders · tap Delete to remove</div>
+      <div class="folders-sub">All SharePoint folders · tap Delete to remove</div>
     </div>
     <button class="btn-folders-back" onclick="closeFolderManager()">← Back</button>
   </div>
@@ -869,16 +869,21 @@ function selectSite(folder, el) {
   document.querySelectorAll('.site-item').forEach(s => s.classList.remove('selected'));
   el.classList.add('selected');
   App.folderName = folder;
-  App.address    = addrFromFolder(folder);
   App.isNewJob   = false;
 
   // Update detected box
-  const customer = customerFromFolder(folder);
-  document.getElementById('detected-address').textContent = App.address;
-  document.getElementById('detected-customer').textContent = '👤 ' + customer;
+  document.getElementById('detected-customer').textContent = '👤 ' + folder;
   document.getElementById('detected-customer').classList.add('visible');
   document.getElementById('new-job-section').classList.remove('visible');
   document.getElementById('detected-box').style.display = '';
+
+  // Go straight to camera — no need to tap "Use This Address"
+  document.getElementById('bar-customer').textContent = folder;
+  document.getElementById('bar-addr').textContent = App.address || '';
+  App.photos = [];
+  renderGrid();
+  refreshUploadBtn();
+  showScreen('camera');
 }
 
 // ── Screen 2: Confirm address ─────────────────────────────────────────────────
