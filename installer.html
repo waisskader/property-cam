@@ -521,7 +521,8 @@
       font-size: 0.88rem;
     }
   </style>
-</head>
+
+  <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script></head>
 <body>
 
 <header class="app-header">
@@ -633,8 +634,8 @@
     <button class="btn btn-ghost" onclick="goBackToAddress()">← Change Job Site</button>
   </div>
 
-  <input type="file" id="input-camera" accept="image/jpeg,image/png" capture="environment" onchange="addPhotosFromInput(this)">
-  <input type="file" id="input-gallery" accept="image/jpeg,image/png" multiple onchange="addPhotosFromInput(this)">
+  <input type="file" id="input-camera" accept="image/*" capture="environment" onchange="addPhotosFromInput(this)">
+  <input type="file" id="input-gallery" accept="image/*" multiple onchange="addPhotosFromInput(this)">
 </div>
 
 <!-- ═══ SCREEN 4: Uploading ══════════════════════════════════════════════════ -->
@@ -925,17 +926,27 @@ function goBackToAddress() {
 }
 
 // ── Screen 3: Camera & Photos ─────────────────────────────────────────────────
-function addPhotosFromInput(input) {
-  const files = Array.from(input.files || []);
-  if (!files.length) return;
-  files.forEach(file => {
-    App.photos.push({ file: file, dataUrl: URL.createObjectURL(file) });
-  });
-  renderGrid();
-  refreshUploadBtn();
+async function addPhotosFromInput(input) {
+  const rawFiles = Array.from(input.files || []);
+  if (!rawFiles.length) return;
   input.value = '';
+  for (const rawFile of rawFiles) {
+    let file = rawFile;
+    const name = rawFile.name || 'photo.jpg';
+    const isHeic = rawFile.type === 'image/heic' || rawFile.type === 'image/heif' ||
+                   /\.(heic|heif)$/i.test(name);
+    if (isHeic && typeof heic2any !== 'undefined') {
+      try {
+        const blob = await heic2any({ blob: rawFile, toType: 'image/jpeg', quality: 0.85 });
+        const result = Array.isArray(blob) ? blob[0] : blob;
+        file = new File([result], name.replace(/\.(heic|heif)$/i, '.jpg'), { type: 'image/jpeg' });
+      } catch (e) { /* use original if conversion fails */ }
+    }
+    App.photos.push({ file: file, dataUrl: URL.createObjectURL(file) });
+    renderGrid();
+    refreshUploadBtn();
+  }
 }
-
 function removePhoto(idx) {
   App.photos.splice(idx, 1);
   renderGrid();
