@@ -925,24 +925,50 @@ function goBackToAddress() {
   showScreen('address');
 }
 
-// ── Screen 3: Camera & Photos ─────────────────────────────────────────────────
+// -- Screen 3: Camera & Photos --
+// Convert any image File to JPEG via canvas.
+// Uses URL.createObjectURL (faster + less memory than FileReader on mobile).
+function toJpegFile(file) {
+  return new Promise(resolve => {
+    const objUrl = URL.createObjectURL(file);
+    const img = new Image();
+    const fail = () => { URL.revokeObjectURL(objUrl); resolve(null); };
+    img.onerror = fail;
+    img.onload = () => {
+      URL.revokeObjectURL(objUrl);
+      const W = img.naturalWidth;
+      const H = img.naturalHeight;
+      if (!W || !H) { resolve(null); return; }
+      const MAX = 2560;
+      const scale = Math.min(1, MAX / Math.max(W, H));
+      const w = Math.round(W * scale);
+      const h = Math.round(H * scale);
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, w, h);
+      ctx.drawImage(img, 0, 0, w, h);
+      canvas.toBlob(blob => {
+        if (!blob || blob.size < 3000) { resolve(null); return; }
+        const name = (file.name || 'photo').replace(/\.[^.]+$/, '') + '.jpg';
+        resolve(new File([blob], name, { type: 'image/jpeg' }));
+      }, 'image/jpeg', 0.90);
+    };
+    img.src = objUrl;
+  });
+}
+
 async function addPhotosFromInput(input) {
   const rawFiles = Array.from(input.files || []);
   if (!rawFiles.length) return;
   input.value = '';
-  for (const rawFile of rawFiles) {
-    let file = rawFile;
-    const name = rawFile.name || 'photo.jpg';
-    const isHeic = rawFile.type === 'image/heic' || rawFile.type === 'image/heif' ||
-                   /\.(heic|heif)$/i.test(name);
-    if (isHeic && typeof heic2any !== 'undefined') {
-      try {
-        const blob = await heic2any({ blob: rawFile, toType: 'image/jpeg', quality: 0.85 });
-        const result = Array.isArray(blob) ? blob[0] : blob;
-        file = new File([result], name.replace(/\.(heic|heif)$/i, '.jpg'), { type: 'image/jpeg' });
-      } catch (e) { /* use original if conversion fails */ }
-    }
-    App.photos.push({ file: file, dataUrl: URL.createObjectURL(file) });
+  for (const raw of rawFiles) {
+    const jpeg = await toJpegFile(raw);
+    const finalFile = jpeg || raw;
+    const previewUrl = URL.createObjectURL(finalFile);
+    App.photos.push({ file: finalFile, dataUrl: previewUrl });
     renderGrid();
     refreshUploadBtn();
   }
