@@ -1024,7 +1024,7 @@ async function startUpload() {
       setStatus(`Uploading photo ${i + 1} of ${total}…`, Math.round((i / total) * 90));
 
       const form = new FormData();
-      form.append('folderName',   folderName);
+      form.append('address',      folderName);
       form.append('photoIndex',   String(i));
       form.append('totalPhotos',  String(total));
       form.append('photo',        App.photos[i].file);
