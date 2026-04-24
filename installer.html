@@ -521,8 +521,7 @@
       font-size: 0.88rem;
     }
   </style>
-
-  <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script></head>
+</head>
 <body>
 
 <header class="app-header">
@@ -569,7 +568,7 @@
     </div>
     <div class="detected-box" id="detected-box">
       <div class="detected-label">
-        <span>��</span> GPS Detected Address
+        <span>📍</span> GPS Detected Address
       </div>
       <div class="detected-address" id="detected-address">Detecting…</div>
       <div class="detected-customer" id="detected-customer"></div>
@@ -681,9 +680,9 @@
 const WORKER_URL = 'https://mute-butterfly-c397propertycam-installer.waisskader.workers.dev';
 
 const App = {
-  address: null,      // GPS / selected address string
-  folderName: null,   // Full folder name: "Smith John - 123 Main St, City, CA"
-  isNewJob: false,    // True when address not found in existing folders
+  address: null,      // GPS / detected address string (shown as context only)
+  folderName: null,   // Customer folder name: "Last, First" (e.g. "Smith, John")
+  isNewJob: false,    // True when no existing folder selected
   photos: [],         // [{ file: File, dataUrl: string }]
   knownFolders: [],   // folder name strings from Worker
 };
@@ -723,23 +722,20 @@ function showError(container, msg) {
   }
 }
 
-// Extract the address portion from a folder name ("Smith John - 123 Main St" → "123 Main St")
-function addrFromFolder(f) {
-  const i = f.indexOf(' - ');
-  return i !== -1 ? f.slice(i + 3).trim() : f.trim();
-}
-
-// Extract customer name ("Smith John - 123 Main St" → "Smith John")
+// Folder names are now "Last, First" — the whole name is the customer name
 function customerFromFolder(f) {
-  const i = f.indexOf(' - ');
-  return i !== -1 ? f.slice(0, i).trim() : '';
+  return f ? f.trim() : '';
 }
 
-// Find existing folder whose address matches the GPS address (case-insensitive)
+// No address is stored in the folder name — address is shown separately from GPS
+function addrFromFolder(f) {
+  return '';
+}
+
+// Auto-match disabled: folder names no longer contain the address.
+// Users pick from the existing list or create a new "Last, First" folder.
 function matchFolder(gpsAddr) {
-  if (!gpsAddr) return null;
-  const norm = gpsAddr.toLowerCase().trim();
-  return App.knownFolders.find(f => addrFromFolder(f).toLowerCase() === norm) || null;
+  return null;
 }
 
 // ── Screen 1: GPS ─────────────────────────────────────────────────────────────
@@ -787,26 +783,16 @@ function setGpsStatus(msg, loading) {
   el.innerHTML = loading ? `<strong>Finding your location…</strong>${msg}` : msg;
 }
 
-// Called when we have an address — checks if it's new or returning job
+// Called when GPS has an address — store it for display and show new-job form.
+// Folder selection is always manual: pick from list or type "Last, First".
 function applyAddressToUI(addr) {
-  const match = matchFolder(addr);
   const customerEl = document.getElementById('detected-customer');
   const newJobEl   = document.getElementById('new-job-section');
-
-  if (match) {
-    // Returning job — show customer name in green
-    App.folderName = match;
-    App.isNewJob = false;
-    customerEl.textContent = '👤 ' + customerFromFolder(match);
-    customerEl.classList.add('visible');
-    newJobEl.classList.remove('visible');
-  } else {
-    // New job — show name input form
-    App.folderName = null;
-    App.isNewJob = true;
-    customerEl.classList.remove('visible');
-    newJobEl.classList.add('visible');
-  }
+  // Always start in new-job mode so user enters the customer name
+  App.folderName = null;
+  App.isNewJob = true;
+  customerEl.classList.remove('visible');
+  newJobEl.classList.add('visible');
 }
 
 // ── Reverse Geocode via Nominatim ─────────────────────────────────────────────
@@ -872,13 +858,13 @@ function selectSite(folder, el) {
   App.folderName = folder;
   App.isNewJob   = false;
 
-  // Update detected box
+  // Update detected box — show customer name, keep GPS address
   document.getElementById('detected-customer').textContent = '👤 ' + folder;
   document.getElementById('detected-customer').classList.add('visible');
   document.getElementById('new-job-section').classList.remove('visible');
   document.getElementById('detected-box').style.display = '';
 
-  // Go straight to camera — no need to tap "Use This Address"
+  // Go straight to camera screen — no need to tap "Use This Address"
   document.getElementById('bar-customer').textContent = folder;
   document.getElementById('bar-addr').textContent = App.address || '';
   App.photos = [];
@@ -889,31 +875,26 @@ function selectSite(folder, el) {
 
 // ── Screen 2: Confirm address ─────────────────────────────────────────────────
 function confirmAddress() {
-  if (!App.address) {
-    showError('address-errors', 'Please select a job site from the list below.');
-    return;
-  }
-
   if (App.isNewJob) {
-    // Validate name fields
+    // Validate name fields — folder name is "Last, First"
     const last  = document.getElementById('input-last-name').value.trim();
     const first = document.getElementById('input-first-name').value.trim();
     if (!last || !first) {
       showError('address-errors', 'Please enter the customer\'s last name and first name.');
       return;
     }
-    App.folderName = `${last} ${first} - ${App.address}`;
+    App.folderName = `${last}, ${first}`;
   }
 
   if (!App.folderName) {
-    showError('address-errors', 'Could not determine folder name. Please try again.');
+    // Nothing selected from list and nothing typed
+    showError('address-errors', 'Please select an existing customer from the list, or enter a new customer name above.');
     return;
   }
 
   // Update camera screen header
-  const customer = customerFromFolder(App.folderName);
-  document.getElementById('bar-customer').textContent = customer || App.folderName;
-  document.getElementById('bar-addr').textContent = App.address;
+  document.getElementById('bar-customer').textContent = App.folderName;
+  document.getElementById('bar-addr').textContent = App.address || '';
 
   App.photos = [];
   renderGrid();
@@ -925,37 +906,113 @@ function goBackToAddress() {
   showScreen('address');
 }
 
-// -- Screen 3: Camera & Photos --
-// Convert any image File to JPEG via canvas.
-// Uses URL.createObjectURL (faster + less memory than FileReader on mobile).
-function toJpegFile(file) {
+// ── Screen 3: Camera & Photos ─────────────────────────────────────────────────
+
+// Returns true if the canvas appears blank (all pixels identical — white/gray fill with no real image).
+function _isCanvasBlank(canvas) {
+  try {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return true;
+    const sample = Math.min(canvas.width, 64);
+    const sampleH = Math.min(canvas.height, 64);
+    const { data } = ctx.getImageData(0, 0, sample, sampleH);
+    const r0 = data[0], g0 = data[1], b0 = data[2];
+    for (let i = 4; i < data.length; i += 4) {
+      if (Math.abs(data[i]   - r0) > 8 ||
+          Math.abs(data[i+1] - g0) > 8 ||
+          Math.abs(data[i+2] - b0) > 8) return false;
+    }
+    return true; // every sampled pixel is effectively the same colour → blank
+  } catch (e) {
+    return false; // security error = canvas has data (tainted), not blank
+  }
+}
+
+// Draw a bitmap source onto a canvas and return a JPEG File, or null on failure.
+function _drawAndBlob(source, srcW, srcH, fileName) {
+  // Safe max: 1920px long edge to avoid iOS memory limits
+  const MAX = 1920;
+  const scale = Math.min(1, MAX / Math.max(srcW, srcH));
+  const w = Math.round(srcW * scale);
+  const h = Math.round(srcH * scale);
+
+  const canvas = document.createElement('canvas');
+  canvas.width  = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) { console.warn('[toJpeg] getContext(2d) returned null'); return Promise.resolve(null); }
+
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, w, h);
+  ctx.drawImage(source, 0, 0, w, h);
+
+  console.log(`[toJpeg] canvas ${w}x${h}, blank=${_isCanvasBlank(canvas)}`);
+  if (_isCanvasBlank(canvas)) {
+    console.warn('[toJpeg] canvas is blank after drawImage — not uploading gray placeholder');
+    return Promise.resolve(null);
+  }
+
+  return new Promise(resolve => {
+    canvas.toBlob(blob => {
+      console.log(`[toJpeg] toBlob → type=${blob?.type} size=${blob?.size}`);
+      // A real photo JPEG must be at least ~10 KB
+      if (!blob || blob.size < 10000) { resolve(null); return; }
+      const name = (fileName || 'photo').replace(/\.[^.]+$/, '') + '.jpg';
+      resolve(new File([blob], name, { type: 'image/jpeg' }));
+    }, 'image/jpeg', 0.85);
+  });
+}
+
+// Convert any image File to a JPEG File via canvas.
+// Strategy: try createImageBitmap (fully decoded, iOS 15+), then fall back to <img> + 350ms delay.
+async function toJpegFile(file) {
+  console.log(`[toJpeg] input: name=${file.name} type=${file.type} size=${file.size}`);
+
+  // ── Path A: createImageBitmap (reliable fully-decoded async decode) ──────────
+  if (typeof createImageBitmap === 'function') {
+    try {
+      const bmp = await createImageBitmap(file);
+      console.log(`[toJpeg] createImageBitmap: ${bmp.width}x${bmp.height}`);
+      if (bmp.width && bmp.height) {
+        const result = await _drawAndBlob(bmp, bmp.width, bmp.height, file.name);
+        bmp.close();
+        if (result) return result;
+        console.warn('[toJpeg] createImageBitmap path produced blank — trying <img> path');
+      } else {
+        bmp.close();
+      }
+    } catch (e) {
+      console.warn('[toJpeg] createImageBitmap failed:', e.message);
+    }
+  }
+
+  // ── Path B: <img> element with delay for iOS GPU decode ─────────────────────
   return new Promise(resolve => {
     const objUrl = URL.createObjectURL(file);
     const img = new Image();
-    const fail = () => { URL.revokeObjectURL(objUrl); resolve(null); };
-    img.onerror = fail;
-    img.onload = () => {
+
+    const fail = reason => {
+      console.warn('[toJpeg] <img> path failed:', reason);
       URL.revokeObjectURL(objUrl);
+      resolve(null);
+    };
+
+    img.onerror = () => fail('onerror');
+
+    img.onload = () => {
       const W = img.naturalWidth;
       const H = img.naturalHeight;
-      if (!W || !H) { resolve(null); return; }
-      const MAX = 2560;
-      const scale = Math.min(1, MAX / Math.max(W, H));
-      const w = Math.round(W * scale);
-      const h = Math.round(H * scale);
-      const canvas = document.createElement('canvas');
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, w, h);
-      ctx.drawImage(img, 0, 0, w, h);
-      canvas.toBlob(blob => {
-        if (!blob || blob.size < 3000) { resolve(null); return; }
-        const name = (file.name || 'photo').replace(/\.[^.]+$/, '') + '.jpg';
-        resolve(new File([blob], name, { type: 'image/jpeg' }));
-      }, 'image/jpeg', 0.90);
+      console.log(`[toJpeg] <img> onload: ${W}x${H}`);
+      if (!W || !H) { fail('zero dimensions'); return; }
+
+      // Wait 350 ms so iOS Safari finishes GPU-decoding before we hit the canvas
+      setTimeout(async () => {
+        URL.revokeObjectURL(objUrl);
+        const result = await _drawAndBlob(img, W, H, file.name);
+        resolve(result);
+      }, 350);
     };
+
     img.src = objUrl;
   });
 }
@@ -964,15 +1021,34 @@ async function addPhotosFromInput(input) {
   const rawFiles = Array.from(input.files || []);
   if (!rawFiles.length) return;
   input.value = '';
+
   for (const raw of rawFiles) {
+    console.log(`[addPhotos] raw: name=${raw.name} type=${raw.type} size=${raw.size}`);
+
     const jpeg = await toJpegFile(raw);
-    const finalFile = jpeg || raw;
-    const previewUrl = URL.createObjectURL(finalFile);
-    App.photos.push({ file: finalFile, dataUrl: previewUrl });
+
+    if (!jpeg) {
+      // Canvas conversion failed — only fall back to raw if it's already JPEG/PNG
+      const safeType = /image\/(jpeg|jpg|png|webp)/.test(raw.type);
+      if (safeType && raw.size > 10000) {
+        console.warn('[addPhotos] canvas failed, falling back to raw file:', raw.type, raw.size);
+        const previewUrl = URL.createObjectURL(raw);
+        App.photos.push({ file: raw, dataUrl: previewUrl });
+      } else {
+        alert('Could not process this photo — please try again.');
+        continue;
+      }
+    } else {
+      console.log(`[addPhotos] final JPEG: name=${jpeg.name} type=${jpeg.type} size=${jpeg.size}`);
+      const previewUrl = URL.createObjectURL(jpeg);
+      App.photos.push({ file: jpeg, dataUrl: previewUrl });
+    }
+
     renderGrid();
     refreshUploadBtn();
   }
 }
+
 function removePhoto(idx) {
   App.photos.splice(idx, 1);
   renderGrid();
@@ -1023,11 +1099,22 @@ async function startUpload() {
     for (let i = 0; i < App.photos.length; i++) {
       setStatus(`Uploading photo ${i + 1} of ${total}…`, Math.round((i / total) * 90));
 
+      const photoFile = App.photos[i].file;
+      console.log(`[upload] photo ${i+1}/${total}: name=${photoFile.name} type=${photoFile.type} size=${photoFile.size}`);
+
+      // Guard: refuse to upload suspiciously small or wrong-type files
+      if (photoFile.size < 10000) {
+        throw new Error(`Photo ${i + 1} looks blank (only ${photoFile.size} bytes). Please retake it.`);
+      }
+      if (!photoFile.type.startsWith('image/')) {
+        throw new Error(`Photo ${i + 1} has unexpected type "${photoFile.type}". Please retake it.`);
+      }
+
       const form = new FormData();
-      form.append('folderName',      folderName);
+      form.append('folderName',   folderName);
       form.append('photoIndex',   String(i));
       form.append('totalPhotos',  String(total));
-      form.append('photo',        App.photos[i].file);
+      form.append('photo',        photoFile);
 
       const res = await fetch(`${WORKER_URL}/upload`, { method: 'POST', body: form });
 
@@ -1056,7 +1143,7 @@ async function startUpload() {
 
   } catch (err) {
     alert(`Upload error: ${err.message}`);
-        showScreen('camera');
+    showScreen('camera');
     showError('address-errors', `Upload failed: ${err.message}. Please check your connection and try again.`);
   }
 }
@@ -1140,7 +1227,7 @@ function renderFolderList(folders) {
   });
 }
 
-async function confirmDeleteFolder(btn) {
+aync function confirmDeleteFolder(btn) {
   const item       = btn.closest('.folder-item');
   const folderName = item.dataset.folder;
   const customer   = customerFromFolder(folderName) || folderName;
