@@ -1,7 +1,7 @@
-// PropertyCam Service Worker v2.0
+// PropertyCam Service Worker v4.0
 // Enables "Add to Home Screen" / PWA install on iOS and Android
 
-const CACHE = 'propertycam-v3';
+const CACHE = 'propertycam-v4';
 const PRECACHE = [
   './manifest.json',
   './icon-192.png',
@@ -49,7 +49,7 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Network-first for index.html — always get the freshest version
+  // Network-first for HTML pages — always get the freshest version
   if (url.endsWith('/') || url.includes('index.html') || url.includes('installer.html') || url === self.registration.scope) {
     event.respondWith(
       fetch(event.request)
