@@ -774,7 +774,7 @@ async function init() {
       document.getElementById('no-gps-note').style.display = 'block';
       showScreen('address');
     },
-    { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 }
+    { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
   );
 }
 
@@ -798,7 +798,7 @@ function applyAddressToUI(addr) {
 // ── Reverse Geocode via Nominatim ─────────────────────────────────────────────
 async function reverseGeocode(lat, lon) {
   const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`;
-  const res = await fetch(url, {
+  const res = await fetch(url, { signal: AbortSignal.timeout(8000),
     headers: { 'Accept-Language': 'en-US,en', 'User-Agent': 'PropertyCam-Installer/1.0' },
   });
   if (!res.ok) throw new Error('Geocode failed');
