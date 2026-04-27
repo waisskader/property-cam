@@ -743,38 +743,49 @@ async function init() {
   showScreen('gps');
   fetchKnownSites();   // load in background
 
+  // Hard fallback: never spend more than 5 s on the GPS screen no matter what
+  let locationDone = false;
+  function doneWithLocation() {
+    if (locationDone) return false;
+    locationDone = true;
+    clearTimeout(hardTimer);
+    return true;
+  }
+  function goToAddress(hasGps) {
+    document.getElementById('detected-box').style.display = hasGps ? '' : 'none';
+    document.getElementById('no-gps-note').style.display = hasGps ? 'none' : 'block';
+    showScreen('address');
+  }
+  const hardTimer = setTimeout(() => {
+    if (!locationDone) { locationDone = true; goToAddress(false); }
+  }, 5000);
+
   if (!navigator.geolocation) {
-    setGpsStatus('GPS not supported on this device.', false);
-    setTimeout(() => showScreen('address'), 1500);
+    doneWithLocation();
+    goToAddress(false);
     return;
   }
 
   navigator.geolocation.getCurrentPosition(
     async (pos) => {
+      if (!doneWithLocation()) return;
       setGpsStatus('Detecting street address…', true);
       try {
         const addr = await reverseGeocode(pos.coords.latitude, pos.coords.longitude);
         if (addr) {
           App.address = addr;
           document.getElementById('detected-address').textContent = addr;
-          document.getElementById('detected-box').style.display = '';
-          document.getElementById('no-gps-note').style.display = 'none';
           applyAddressToUI(addr);
+          goToAddress(true);
         } else {
           throw new Error('empty address');
         }
       } catch {
-        document.getElementById('detected-box').style.display = 'none';
-        document.getElementById('no-gps-note').style.display = 'block';
+        goToAddress(false);
       }
-      showScreen('address');
     },
-    () => {
-      document.getElementById('detected-box').style.display = 'none';
-      document.getElementById('no-gps-note').style.display = 'block';
-      showScreen('address');
-    },
-    { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+    () => { if (doneWithLocation()) goToAddress(false); },
+    { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
   );
 }
 
