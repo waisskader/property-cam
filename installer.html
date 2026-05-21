@@ -1238,7 +1238,7 @@ function renderFolderList(folders) {
   });
 }
 
-aync function confirmDeleteFolder(btn) {
+async function confirmDeleteFolder(btn) {
   const item       = btn.closest('.folder-item');
   const folderName = item.dataset.folder;
   const customer   = customerFromFolder(folderName) || folderName;
